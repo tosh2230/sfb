@@ -1,7 +1,10 @@
+"""
+Entry point for the CLI
+"""
 import sys
 from .estimation import Estimation
 
-def main():
+def cli():
     if len(sys.argv) == 2:
         estimation = Estimation()
         response = estimation.calc(sys.argv[1])

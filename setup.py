@@ -20,8 +20,8 @@ setup(
         'Programming Language :: Python :: 3 :: Only',
     ],
     keywords='bigquery, sql, testing, development',  # Optional
-    package_dir={'': 'src'},  # Optional
-    packages=find_packages(where='src'),  # Required
+    package_dir={'': 'sfb'},  # Optional
+    packages=find_packages(where='sfb'),  # Required
     python_requires='>=3.6, <4',
     install_requires=['google-cloud-bigquery'],  # Optional
     # extras_require={  # Optional
@@ -34,7 +34,7 @@ setup(
     # data_files=[('my_data', ['data/data_file'])],  # Optional
     entry_points={  # Optional
         'console_scripts': [
-            'sfb=sfb:main',
+            'sfb=sfb.main:cli',
         ],
     },
     # project_urls={  # Optional
