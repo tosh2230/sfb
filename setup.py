@@ -6,7 +6,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name='sfb',  # Required
-    version='0.0.5',  # Required
+    version='0.0.7',  # Required
     description='Save (us) from bankruptcy',  # Optional
     long_description=long_description,  # Optional
     long_description_content_type='text/markdown',  # Optional
@@ -20,8 +20,8 @@ setup(
         'Programming Language :: Python :: 3 :: Only',
     ],
     keywords='bigquery, sql, testing, development',  # Optional
-    package_dir={'': 'sfb'},  # Optional
-    packages=find_packages(where='sfb'),  # Required
+    # package_dir={'': 'sfb'},  # Optional
+    packages=find_packages(),  # Required
     python_requires='>=3.6, <4',
     install_requires=['google-cloud-bigquery'],  # Optional
     # extras_require={  # Optional

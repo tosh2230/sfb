@@ -1,6 +1,6 @@
 import sys
 from google.cloud import bigquery
-from fx import Fx
+from sfb.dryrun.fx import Fx
 
 TB = 1099511627776      # 1 TB
 PRICING_ON_DEMAND = 5   # $5.00 per TB
