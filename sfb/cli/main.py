@@ -2,7 +2,7 @@
 Entry point for the CLI
 """
 import sys
-from .estimation import Estimation
+from sfb.dryrun.estimation import Estimation
 
 def cli():
     if len(sys.argv) == 2:

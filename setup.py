@@ -6,7 +6,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name='sfb',  # Required
-    version='0.0.1',  # Required
+    version='0.0.5',  # Required
     description='Save (us) from bankruptcy',  # Optional
     long_description=long_description,  # Optional
     long_description_content_type='text/markdown',  # Optional
@@ -34,7 +34,7 @@ setup(
     # data_files=[('my_data', ['data/data_file'])],  # Optional
     entry_points={  # Optional
         'console_scripts': [
-            'sfb=sfb.main:cli',
+            'sfb=sfb.cli.main:cli',
         ],
     },
     # project_urls={  # Optional
