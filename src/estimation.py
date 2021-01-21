@@ -34,10 +34,10 @@ class Estimation():
         except Exception as e:
             raise e
 
-if __name__ == '__main__':
-    if len(sys.argv) == 2:
-        estimation = Estimation()
-        response = estimation.calc(sys.argv[1])
-        print(response)
-    else:
-        print('Please set a argument: sql-file')
+# if __name__ == '__main__':
+#     if len(sys.argv) == 2:
+#         estimation = Estimation()
+#         response = estimation.calc(sys.argv[1])
+#         print(response)
+#     else:
+#         print('Please set a argument: sql-file')
