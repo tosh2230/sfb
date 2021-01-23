@@ -35,6 +35,7 @@ class Estimator():
 
         except (BadRequest, NotFound) as e:
             print(e)
+            return e
         except Exception as e:
             raise e
 
