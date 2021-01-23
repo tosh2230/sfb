@@ -2,4 +2,5 @@ include LICENSE
 exclude *.sh
 recursive-include sfb *.py
 recursive-exclude tests *.py
+recursive-exclude tests *.sql
 exclude README.md
