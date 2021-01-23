@@ -41,6 +41,7 @@ class Estimator():
             __dollar = __query_job.total_bytes_processed / TB * PRICING_ON_DEMAND
 
             return {
+                "sql_file": filepath,
                 "total_bytes_processed": __query_job.total_bytes_processed,
                 "doller": __dollar,
             }

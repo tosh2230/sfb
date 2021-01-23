@@ -9,9 +9,11 @@ class EntryPoint():
     def get_args(self):
         __parser = argparse.ArgumentParser()
         __parser.add_argument(
-            "sql_file_path", 
-            help="sql file path",
+            "-s", "--sql", 
+            help="sql path",
             type=str,
+            nargs='*',
+            required=True
         )
         __parser.add_argument(
             "-t", "--timeout", 
@@ -20,15 +22,21 @@ class EntryPoint():
         )
 
         self.__args = __parser.parse_args()
+
+        return self
     
     def execute(self):
-        print(f"target_file: {self.__args.sql_file_path}")
         __estimator = Estimator(timeout=self.__args.timeout)
-        __response = __estimator.check(self.__args.sql_file_path)
-        return __response
 
+        try:
+            for sql in self.__args.sql:
+                print(__estimator.check(sql))
+        except FileNotFoundError as e:
+            print(e)
+        finally:
+            return self
+
+########################################
 if __name__ == "__main__":
-    __entry_point = EntryPoint()
-    __entry_point.get_args()
-    response = __entry_point.execute()
-    print(response)
+    ep = EntryPoint()
+    ep.get_args().execute()
