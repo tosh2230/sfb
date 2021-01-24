@@ -10,6 +10,10 @@ ATHENA = 'athena'
 
 class EntryPoint():
     def __init__(self):
+        self.__args = self.__get_args()
+        self.__logger = self.__get_logger()
+
+    def __get_args(self):
         __parser = argparse.ArgumentParser()
         __parser.add_argument(
             "-s", "--sql", 
@@ -30,7 +34,7 @@ class EntryPoint():
             type=float,
         )
 
-        self.__args = __parser.parse_args()
+        return __parser.parse_args()
 
     def __get_logger(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -49,7 +53,7 @@ class EntryPoint():
 
         try:
             if self.__args.data_source_type in (BQ, None):
-                __estimator = BqEstimator(logger=self.__get_logger(), timeout=self.__args.timeout)
+                __estimator = BqEstimator(logger=self.__logger, timeout=self.__args.timeout)
             elif self.__args.data_source_type in (ATHENA):
                 return {}
             else:
@@ -60,9 +64,9 @@ class EntryPoint():
                 response['results'].append(result)
             return response
         except FileNotFoundError as e:
-            print(e)
+            self.__logger.exception(e, exc_info=False)
         except Exception as e:
-            raise e
+            self.__logger.exception(e, exc_info=True)
 
 ########################################
 if __name__ == "__main__":
