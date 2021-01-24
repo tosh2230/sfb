@@ -14,13 +14,13 @@ class TestBigQueryEstimatorSuccees:
 
 class TestBigQueryEstimatorFailure:
     def test_check_notfound_type(self, check_failure_notfound):
-        assert type(check_failure_notfound) is NotFound
+        assert 'Not found' in check_failure_notfound['errors'][0]['message']
 
     def test_check_badrequest_01(self, check_failure_badrequest_01):
-        assert type(check_failure_badrequest_01) is BadRequest
+        assert 'Unrecognized name' in check_failure_badrequest_01['errors'][0]['message']
 
     def test_check_badrequest_02(self, check_failure_badrequest_02):
-        assert type(check_failure_badrequest_02) is BadRequest
+        assert 'Syntax error' in check_failure_badrequest_02['errors'][0]['message']
 
     def test_check_timeout(self, check_failure_timeout):
-        assert type(check_failure_timeout) is ReadTimeout
+        assert 'Read timed out' in check_failure_timeout['errors']

@@ -5,9 +5,6 @@ from bq import Estimator
 
 class EntryPoint():
     def __init__(self):
-        pass
-
-    def get_args(self):
         __parser = argparse.ArgumentParser()
         __parser.add_argument(
             "-s", "--sql", 
@@ -24,20 +21,22 @@ class EntryPoint():
 
         self.__args = __parser.parse_args()
 
-        return self
-    
     def execute(self):
         __estimator = Estimator(timeout=self.__args.timeout)
+        response = {}
+        response['results'] = []
 
         try:
             for sql in self.__args.sql:
-                print(json.dumps(__estimator.check(sql), indent=2))
+                result = __estimator.check(sql)
+                response['results'].append(result)
+            return response
         except FileNotFoundError as e:
             print(e)
-        finally:
-            return self
 
 ########################################
 if __name__ == "__main__":
     ep = EntryPoint()
-    ep.get_args().execute()
+    response = ep.execute()
+    for result in response['results']:
+        print(json.dumps((result), indent=2))
