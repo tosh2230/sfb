@@ -1,4 +1,5 @@
 import argparse
+import json
 
 from bq import Estimator
 
@@ -30,7 +31,7 @@ class EntryPoint():
 
         try:
             for sql in self.__args.sql:
-                print(__estimator.check(sql))
+                print(json.dumps(__estimator.check(sql), indent=2))
         except FileNotFoundError as e:
             print(e)
         finally:

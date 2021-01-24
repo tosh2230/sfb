@@ -46,7 +46,11 @@ class Estimator():
                 "doller": __dollar,
             }
 
-        except (exceptions.BadRequest, exceptions.NotFound, ReadTimeout) as e:
+        except (exceptions.BadRequest, exceptions.NotFound) as e:
+            print(e)
+            return e
+        except (ReadTimeout) as e:
+            print(f'Read timeout: {filepath}')
             print(e)
             return e
         except Exception as e:
