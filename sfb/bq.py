@@ -53,13 +53,14 @@ class Estimator():
             }
 
         except (exceptions.BadRequest, exceptions.NotFound) as e:
+            print(f'\nsql_file: {filepath}')
             print(e)
             return {
                 "sql_file": filepath,
                 "errors": e.errors,
             }
         except (ReadTimeout) as e:
-            print(f'Read timeout: {filepath}')
+            print(f'\nsql_file: {filepath}')
             print(str(e))
             return {
                 "sql_file": filepath,
