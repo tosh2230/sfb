@@ -1,5 +1,4 @@
 import sys
-from datetime import datetime, timedelta, timezone
 
 from requests.exceptions import ReadTimeout
 import google.api_core.exceptions as exceptions
@@ -10,15 +9,9 @@ TB = 1099511627776      # 1 TB
 PRICING_ON_DEMAND = 5   # $5.00 per TB
 
 class Estimator():
-    def __init__(self, timeout: float=None, logger=None) -> None:
+    def __init__(self, timeout: float=None, logger=None, conf=None) -> None:
         self.__logger = logger
         self.__client = bigquery.Client()
-        self.__job_config = bigquery.QueryJobConfig(
-            dry_run=True,
-            use_legacy_sql=False,
-            use_query_cache=False,
-            query_parameters=[],
-        )
 
         __predicate = if_exception_type(
             exceptions.InternalServerError,
@@ -27,31 +20,52 @@ class Estimator():
         )
         self.__retry = Retry(predicate=__predicate)
         self.__timeout = timeout
+        self.__conf = conf
 
-        self.UTC = timezone(timedelta(hours=0), 'UTC')
+    def __get_query_parameters(self, param_list: list, target: str):
+        query_parameters = []
+        for file in param_list:
+            if file.get(target) is not None:
+                for d in file[target]['Parameters']:
+                    param = bigquery.ScalarQueryParameter(d['name'], d['type'], d['value'])
+                    query_parameters.append(param)
+                break
+
+        return query_parameters
 
     def check(self, filepath: str) -> dict:
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
-                __query = f.read()
+                query = f.read()
 
-            start_time = datetime.now(self.UTC)
+            if self.__conf is not None:
+                param_list = self.__conf['QueryFiles']
+                target = filepath.split('/')[-1]
+                query_parameters = self.__get_query_parameters(param_list=param_list, target=target)
+            else:
+                query_parameters = []
 
-            __query_job = self.__client.query(
-                __query,
-                job_config=self.__job_config,
+            job_config = bigquery.QueryJobConfig(
+                dry_run=True,
+                use_legacy_sql=False,
+                use_query_cache=False,
+                query_parameters=query_parameters,
+            )
+
+            query_job = self.__client.query(
+                query,
+                job_config=job_config,
                 retry=self.__retry,
                 timeout=self.__timeout,
             )
 
-            time_elapsed = datetime.now(self.UTC) - start_time
-            __dollar = __query_job.total_bytes_processed / TB * PRICING_ON_DEMAND
+            dollar = query_job.total_bytes_processed / TB * PRICING_ON_DEMAND
 
             return {
                 "sql_file": filepath,
-                "total_bytes_processed": __query_job.total_bytes_processed,
-                "cost($)": round(__dollar, 6),
-                "time_elapsed": str(time_elapsed),
+                "query_parameter": str(query_parameters),
+                "total_bytes_processed": query_job.total_bytes_processed,
+                "cost($)": round(dollar, 6),
             }
 
         except (exceptions.BadRequest, exceptions.NotFound) as e:
@@ -62,7 +76,8 @@ class Estimator():
                 "sql_file": filepath,
                 "errors": e.errors,
             }
-        except (ReadTimeout) as e:
+
+        except ReadTimeout as e:
             if self.__logger:
                 self.__logger.exception(f'sql_file: {filepath}')
                 self.__logger.exception(e, exc_info=False)
@@ -70,6 +85,16 @@ class Estimator():
                 "sql_file": filepath,
                 "errors": str(e),
             }
+
+        except KeyError as e:
+            if self.__logger:
+                self.__logger.exception(f'sql_file: {filepath}')
+                self.__logger.exception(e, exc_info=False)
+            return {
+                "sql_file": filepath,
+                "errors": f"Config KeyError: {e}",
+            }
+
         except Exception as e:
             if self.__logger:
                 self.__logger.exception(f'sql_file: {filepath}')

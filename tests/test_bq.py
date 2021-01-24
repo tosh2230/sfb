@@ -10,7 +10,7 @@ class TestBigQueryEstimatorSuccees:
         assert check_success['total_bytes_processed'] == 65935918
 
     def test_check_doller(self, check_success):
-        assert check_success['doller'] == 0.00029984184038767125
+        assert check_success['cost($)'] == 0.0003
 
 class TestBigQueryEstimatorFailure:
     def test_check_notfound_type(self, check_failure_notfound):

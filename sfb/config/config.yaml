@@ -1,31 +1,28 @@
+# Type
+# Name of parameter type. One of 'STRING', 'INT64', 'FLOAT64', 'NUMERIC', 'BOOL', 'TIMESTAMP', 'DATETIME', or 'DATE'
+
 Global:
   DataSourceType: bq
-  Parameters:
-    - ParameterName: ds_start_date
-      Description: date_from
-      Type: Date
-      Default: '2020-01-01'
 
 QueryFiles:
-  - Covid19:
-      FileName: covid19_open_data.covid19_open_data.sql
-      DataSourceType: bq
+  - covid19_open_data.covid19_open_data.sql:
       Parameters:
-        - ParameterName: ds_start_date
-          Description: date_from
-          Type: Date
-          Default: '2020-01-01'
-  - Bitcoin:
-      FileName: crypto_bitcoin.transactions.sql
+        - name: ds_start_date
+          type: DATE
+          value: '2020-01-01'
+        - name: ds_end_date
+          type: DATE
+          value: '2020-01-31'
+  - crypto_bitcoin.transactions.sql:
       Parameters:
-        - ParameterName: ds_end_date
-          Description: date_to
-          Type: Date
-          Default: '2020-12-31'
-  - UsaNames:
-      FileName: usa_names.usa_1910_2013.sql
+        - name: ds_start_date
+          type: DATE
+          value: '2020-01-01'
+        - name: ds_end_date
+          type: DATE
+          value: '2020-01-20'
+  - usa_names.usa_1910_2013.sql:
       Parameters:
-        - ParameterName: state
-          Description: state of USA
-          Type: String
-          Default: 'WA'
+        - name: state
+          type: STRING
+          value: 'WA'
