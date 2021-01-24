@@ -8,7 +8,10 @@ from sfb.entrypoint import EntryPoint
 
 def cli():
     ep = EntryPoint()
-    ep.execute()
+    return ep.execute()
 
 if __name__ == '__main__':
-    cli()
+    response = cli()
+    if 'results' in response:
+        for result in response['results']:
+            print(json.dumps((result), indent=2))

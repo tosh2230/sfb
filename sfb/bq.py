@@ -35,6 +35,8 @@ class Estimator():
             with open(filepath, 'r', encoding='utf-8') as f:
                 __query = f.read()
 
+            start_time = datetime.now(self.UTC)
+
             __query_job = self.__client.query(
                 __query,
                 job_config=self.__job_config,
@@ -42,14 +44,13 @@ class Estimator():
                 timeout=self.__timeout,
             )
 
-            time_elapsed = datetime.now(self.UTC) - __query_job.created
-
+            time_elapsed = datetime.now(self.UTC) - start_time
             __dollar = __query_job.total_bytes_processed / TB * PRICING_ON_DEMAND
 
             return {
                 "sql_file": filepath,
                 "total_bytes_processed": __query_job.total_bytes_processed,
-                "doller": __dollar,
+                "cost($)": round(__dollar, 6),
                 "time_elapsed": str(time_elapsed),
             }
 

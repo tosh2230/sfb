@@ -8,15 +8,6 @@ from bq import Estimator as BqEstimator
 BQ = 'bq'
 ATHENA = 'athena'
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-
-# logger
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-handler = logging.FileHandler(filename=f"{current_dir}/log/error.log")
-handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)8s %(message)s"))
-logger.addHandler(handler)
-
 class EntryPoint():
     def __init__(self):
         __parser = argparse.ArgumentParser()
@@ -41,13 +32,24 @@ class EntryPoint():
 
         self.__args = __parser.parse_args()
 
+    def __get_logger(self):
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.WARNING)
+        handler = logging.FileHandler(filename=f"{current_dir}/log/error.log")
+        handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)8s %(message)s"))
+        logger.addHandler(handler)
+
+        return logger
+
     def execute(self):
         response = {}
         response['results'] = []
 
         try:
             if self.__args.data_source_type in (BQ, None):
-                __estimator = BqEstimator(logger=logger, timeout=self.__args.timeout)
+                __estimator = BqEstimator(logger=self.__get_logger(), timeout=self.__args.timeout)
             elif self.__args.data_source_type in (ATHENA):
                 return {}
             else:

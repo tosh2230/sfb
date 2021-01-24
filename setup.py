@@ -23,7 +23,7 @@ setup(
     # package_dir={'': 'sfb'},  # Optional
     packages=find_packages(),  # Required
     python_requires='>=3.6, <4',
-    install_requires=['google-cloud-bigquery'],  # Optional
+    install_requires=['google-cloud-bigquery', 'requests'],  # Optional
     # extras_require={  # Optional
     #     'dev': ['check-manifest'],
     #     'test': ['coverage'],
