@@ -1,10 +1,21 @@
+import os
 import argparse
 import json
+import logging
 
 from bq import Estimator as BqEstimator
 
 BQ = 'bq'
 ATHENA = 'athena'
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = logging.FileHandler(filename=f"{current_dir}/log/error.log")
+handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)8s %(message)s"))
+logger.addHandler(handler)
 
 class EntryPoint():
     def __init__(self):
@@ -36,7 +47,7 @@ class EntryPoint():
 
         try:
             if self.__args.data_source_type in (BQ, None):
-                __estimator = BqEstimator(timeout=self.__args.timeout)
+                __estimator = BqEstimator(logger=logger, timeout=self.__args.timeout)
             elif self.__args.data_source_type in (ATHENA):
                 return {}
             else:

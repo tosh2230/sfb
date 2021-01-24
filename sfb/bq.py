@@ -10,7 +10,8 @@ TB = 1099511627776      # 1 TB
 PRICING_ON_DEMAND = 5   # $5.00 per TB
 
 class Estimator():
-    def __init__(self, timeout: float) -> None:
+    def __init__(self, timeout: float=None, logger=None) -> None:
+        self.__logger = logger
         self.__client = bigquery.Client()
         self.__job_config = bigquery.QueryJobConfig(
             dry_run=True,
@@ -53,18 +54,23 @@ class Estimator():
             }
 
         except (exceptions.BadRequest, exceptions.NotFound) as e:
-            print(f'\nsql_file: {filepath}')
-            print(e)
+            if self.__logger:
+                self.__logger.exception(f'sql_file: {filepath}')
+                self.__logger.exception(e, exc_info=False)
             return {
                 "sql_file": filepath,
                 "errors": e.errors,
             }
         except (ReadTimeout) as e:
-            print(f'\nsql_file: {filepath}')
-            print(str(e))
+            if self.__logger:
+                self.__logger.exception(f'sql_file: {filepath}')
+                self.__logger.exception(e, exc_info=False)
             return {
                 "sql_file": filepath,
                 "errors": str(e),
             }
         except Exception as e:
+            if self.__logger:
+                self.__logger.exception(f'sql_file: {filepath}')
+                self.__logger.exception(e, exc_info=False)
             raise e

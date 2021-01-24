@@ -12,7 +12,7 @@ sql_file_failure_br_02 = f'{current_dir}/sql/test_failure_badrequest_02.sql'
 
 @pytest.fixture(scope="session")
 def estimator():
-    estimator = Estimator(timeout=None)
+    estimator = Estimator()
     return estimator
 
 @pytest.fixture(scope="session")
