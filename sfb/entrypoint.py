@@ -74,10 +74,15 @@ class EntryPoint():
         response['results'] = []
 
         try:
+            print(json.dumps(self.__conf, indent=2))
             conf_dst = self.__conf.get('Global', {}).get('DataSourceType')
 
             if self.__args.data_source_type in (None, BQ) or conf_dst in (None, BQ):
-                __estimator = BqEstimator(logger=self.__logger, timeout=self.__args.timeout, conf=self.__conf)
+                __estimator = BqEstimator(
+                    logger=self.__logger,
+                    timeout=self.__args.timeout,
+                    conf=self.__conf
+                )
             elif self.__args.data_source_type in (ATHENA) or conf_dst in (ATHENA):
                 return {}
             else:

@@ -22,15 +22,17 @@ class Estimator():
         self.__timeout = timeout
         self.__conf = conf
 
-    def __get_query_parameters(self, param_list: list, target: str):
-        query_parameters = []
+    def __get_query_conf(self, param_list: list, target: str):
         for file in param_list:
             if file.get(target) is not None:
-                for d in file[target]['Parameters']:
-                    param = bigquery.ScalarQueryParameter(d['name'], d['type'], d['value'])
-                    query_parameters.append(param)
-                break
+                return file.get(target)
+        return None
 
+    def __get_query_parameters(self, query_conf):
+        query_parameters = []
+        for d in query_conf['Parameters']:
+            param = bigquery.ScalarQueryParameter(d['name'], d['type'], d['value'])
+            query_parameters.append(param)
         return query_parameters
 
     def check(self, filepath: str) -> dict:
@@ -38,12 +40,16 @@ class Estimator():
             with open(filepath, 'r', encoding='utf-8') as f:
                 query = f.read()
 
+            query_parameters = []
+            location = None
+
             if self.__conf is not None:
                 param_list = self.__conf['QueryFiles']
                 target = filepath.split('/')[-1]
-                query_parameters = self.__get_query_parameters(param_list=param_list, target=target)
-            else:
-                query_parameters = []
+                query_conf = self.__get_query_conf(param_list=param_list, target=target)
+                if query_conf is not None:
+                    query_parameters = self.__get_query_parameters(query_conf)
+                    location = query_conf.get('location')
 
             job_config = bigquery.QueryJobConfig(
                 dry_run=True,
@@ -55,6 +61,7 @@ class Estimator():
             query_job = self.__client.query(
                 query,
                 job_config=job_config,
+                location=location,
                 retry=self.__retry,
                 timeout=self.__timeout,
             )
