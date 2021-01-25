@@ -74,7 +74,7 @@ class EntryPoint():
         response['results'] = []
 
         try:
-            print(json.dumps(self.__conf, indent=2))
+            # print(json.dumps(self.__conf, indent=2))
             conf_dst = self.__conf.get('Global', {}).get('DataSourceType')
 
             if self.__args.data_source_type in (None, BQ) or conf_dst in (None, BQ):
