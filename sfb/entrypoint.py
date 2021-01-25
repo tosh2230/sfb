@@ -13,8 +13,12 @@ class EntryPoint():
     def __init__(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
         self.__args = self.__get_args()
-        self.__logger = self.__get_logger(current_dir)
         self.__conf = self.__get_conf(current_dir)
+
+        if self.__args.debug:
+            self.__logger = self.__get_logger(current_dir)
+        else:
+            self.__logger = None
 
     def __get_args(self):
         parser = argparse.ArgumentParser()
@@ -36,8 +40,20 @@ class EntryPoint():
             help="request timeout seconds",
             type=float,
         )
+        parser.add_argument(
+            '--debug',
+            action='store_true'
+        )
 
         return parser.parse_args()
+
+    def __get_conf(self, current_dir):
+        conf = None
+        file = f'{current_dir}/config/config.yaml'
+        if os.path.isfile(file):
+            with open(f'{current_dir}/config/config.yaml') as f:
+                conf = yaml.load(f, Loader=yaml.SafeLoader)
+        return conf
 
     def __get_logger(self, current_dir):
         logger = logging.getLogger(__name__)
@@ -52,14 +68,6 @@ class EntryPoint():
         logger.addHandler(handler)
 
         return logger
-
-    def __get_conf(self, current_dir):
-        conf = None
-        file = f'{current_dir}/config/config.yaml'
-        if os.path.isfile(file):
-            with open(f'{current_dir}/config/config.yaml') as f:
-                conf = yaml.load(f, Loader=yaml.SafeLoader)
-        return conf
 
     def execute(self):
         response = {}
