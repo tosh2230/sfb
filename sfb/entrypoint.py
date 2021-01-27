@@ -74,6 +74,7 @@ class EntryPoint():
         response = []
 
         try:
+            DEFAULT = (None, BQ)
             config_file_list = self.__config.get('QueryFiles')
 
             for sql in self.__args.sql:
@@ -81,13 +82,13 @@ class EntryPoint():
                 file_name = sql.split('/')[-1]
                 service = config_file_list[file_name]['Service']
 
-                if self.__args.data_source_type in (None, BQ) or service in (None, BQ):
+                if self.__args.data_source_type in DEFAULT or service in DEFAULT:
                     estimator = BigQueryEstimator(
                         logger=self.__logger,
                         timeout=self.__args.timeout,
                         config=self.__config
                     )
-                elif self.__args.data_source_type == ATHENA or service in (ATHENA):
+                elif self.__args.data_source_type == ATHENA or service == ATHENA:
                     return {"Athena": "Now Coding..."}
                 else:
                     raise argparse.ArgumentError
