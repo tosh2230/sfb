@@ -4,7 +4,7 @@ import json
 import logging
 import yaml
 
-from bq import BigQueryEstimator
+from services.bq import BigQueryEstimator
 
 CONFIG_FILE = 'config/sfb.yaml'
 BQ = 'BigQuery'

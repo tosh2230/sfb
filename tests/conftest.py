@@ -1,7 +1,7 @@
 import pytest
 import os
 
-from sfb.bq import Estimator
+from sfb.services.bq import BigQueryEstimator
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -12,7 +12,7 @@ sql_file_failure_br_02 = f'{current_dir}/sql/test_failure_badrequest_02.sql'
 
 @pytest.fixture(scope="session")
 def estimator():
-    estimator = Estimator()
+    estimator = BigQueryEstimator()
     return estimator
 
 @pytest.fixture(scope="session")
@@ -33,5 +33,5 @@ def check_failure_badrequest_02(estimator):
 
 @pytest.fixture(scope="session")
 def check_failure_timeout():
-    estimator_timeout = Estimator(timeout=0.1)
+    estimator_timeout = BigQueryEstimator(timeout=0.1)
     return estimator_timeout.check(sql_file_success)

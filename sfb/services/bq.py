@@ -4,7 +4,7 @@ from requests.exceptions import ReadTimeout
 import google.api_core.exceptions as exceptions
 from google.cloud import bigquery
 
-from estimator import Estimator
+from .estimator import Estimator
 
 UNIT_SIZE = 1099511627776       # 1 TB
 PRICING_ON_DEMAND = 5           # $5.00 per TB
