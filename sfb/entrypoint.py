@@ -6,14 +6,15 @@ import yaml
 
 from bq import Estimator as BqEstimator
 
-BQ = 'bq'
-ATHENA = 'athena'
+CONFIG_FILE = 'config/sfb.yaml'
+BQ = 'BigQuery'
+ATHENA = 'Athena'
 
 class EntryPoint():
     def __init__(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
         self.__args = self.__get_args()
-        self.__conf = self.__get_conf(current_dir)
+        self.__config = self.__get_config(current_dir)
 
         if self.__args.debug:
             self.__logger = self.__get_logger(current_dir)
@@ -47,13 +48,13 @@ class EntryPoint():
 
         return parser.parse_args()
 
-    def __get_conf(self, current_dir):
-        conf = None
-        file = f'{current_dir}/config/config.yaml'
+    def __get_config(self, current_dir):
+        config = None
+        file = f'{current_dir}/{CONFIG_FILE}'
         if os.path.isfile(file):
-            with open(f'{current_dir}/config/config.yaml') as f:
-                conf = yaml.load(f, Loader=yaml.SafeLoader)
-        return conf
+            with open(file) as f:
+                config = yaml.load(f, Loader=yaml.SafeLoader)
+        return config
 
     def __get_logger(self, current_dir):
         logger = logging.getLogger(__name__)
@@ -74,27 +75,35 @@ class EntryPoint():
         response['results'] = []
 
         try:
-            # print(json.dumps(self.__conf, indent=2))
-            conf_dst = self.__conf.get('Global', {}).get('DataSourceType')
-
-            if self.__args.data_source_type in (None, BQ) or conf_dst in (None, BQ):
-                __estimator = BqEstimator(
-                    logger=self.__logger,
-                    timeout=self.__args.timeout,
-                    conf=self.__conf
-                )
-            elif self.__args.data_source_type in (ATHENA) or conf_dst in (ATHENA):
-                return {}
-            else:
-                raise argparse.ArgumentError
+            print(json.dumps(self.__config, indent=2))
+            config_file_list = self.__config.get('QueryFiles')
 
             for sql in self.__args.sql:
-                result = __estimator.check(sql)
+                estimator = None
+                file_name = sql.split('/')[-1]
+                service = config_file_list[file_name]['Service']
+
+                if self.__args.data_source_type in (None, BQ) or service in (None, BQ):
+                    estimator = BqEstimator(
+                        logger=self.__logger,
+                        timeout=self.__args.timeout,
+                        config=self.__config
+                    )
+                elif self.__args.data_source_type == ATHENA or service in (ATHENA):
+                    return {"Athena": "Now Coding..."}
+                else:
+                    raise argparse.ArgumentError
+
+                result = estimator.check(sql)
                 response['results'].append(result)
+
             return response
-        except FileNotFoundError as e:
-            self.__logger.exception(e, exc_info=False)
+
+        except (FileNotFoundError, KeyError) as e:
+            if self.__logger:
+                self.__logger.exception(e, exc_info=False)
             raise e
+
         except Exception as e:
             self.__logger.exception(e, exc_info=True)
             raise e
@@ -103,6 +112,7 @@ class EntryPoint():
 if __name__ == "__main__":
     ep = EntryPoint()
     response = ep.execute()
-    if response is not None:
-        for result in response['results']:
-            print(json.dumps(result, indent=2))
+    if response is  None:
+        print('SQL files are not found.')
+    for result in response['results']:
+        print(json.dumps(result, indent=2))

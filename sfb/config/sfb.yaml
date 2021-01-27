@@ -1,0 +1,31 @@
+# https://googleapis.dev/python/bigquery/2.6.1/index.html
+# Type
+#   Name of parameter type. One of 'STRING', 'INT64', 'FLOAT64', 'NUMERIC', 'BOOL', 'TIMESTAMP', 'DATETIME', or 'DATE'
+QueryFiles:
+  covid19_open_data.covid19_open_data.sql:
+    Service: BigQuery
+    location: US
+    Parameters:
+    - name: ds_start_date
+      type: DATE
+      value: '2020-01-01'
+    - name: ds_end_date
+      type: DATE
+      value: '2020-01-31'
+  crypto_bitcoin.transactions.sql:
+    Service: BigQuery
+    location: US
+    Parameters:
+    - name: ds_start_date
+      type: DATE
+      value: '2020-01-01'
+    - name: ds_end_date
+      type: DATE
+      value: '2020-01-20'
+  usa_names.usa_1910_2013.sql:
+    Service: BigQuery
+    location: US
+    Parameters:
+    - name: state
+      type: STRING
+      value: 'WA'
