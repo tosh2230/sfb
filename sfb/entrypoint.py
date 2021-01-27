@@ -4,7 +4,7 @@ import json
 import logging
 import yaml
 
-from bq import Estimator as BqEstimator
+from bq import BigQueryEstimator
 
 CONFIG_FILE = 'config/sfb.yaml'
 BQ = 'BigQuery'
@@ -21,7 +21,7 @@ class EntryPoint():
         else:
             self.__logger = None
 
-    def __get_args(self):
+    def __get_args(self) -> argparse.Namespace:
         parser = argparse.ArgumentParser()
         parser.add_argument(
             "-s", "--sql", 
@@ -48,7 +48,7 @@ class EntryPoint():
 
         return parser.parse_args()
 
-    def __get_config(self, current_dir):
+    def __get_config(self, current_dir: str) -> dict:
         config = None
         file = f'{current_dir}/{CONFIG_FILE}'
         if os.path.isfile(file):
@@ -56,7 +56,7 @@ class EntryPoint():
                 config = yaml.load(f, Loader=yaml.SafeLoader)
         return config
 
-    def __get_logger(self, current_dir):
+    def __get_logger(self, current_dir: str) -> logging.Logger:
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.WARNING)
 
@@ -70,12 +70,10 @@ class EntryPoint():
 
         return logger
 
-    def execute(self):
-        response = {}
-        response['results'] = []
+    def execute(self) -> dict:
+        response = []
 
         try:
-            print(json.dumps(self.__config, indent=2))
             config_file_list = self.__config.get('QueryFiles')
 
             for sql in self.__args.sql:
@@ -84,7 +82,7 @@ class EntryPoint():
                 service = config_file_list[file_name]['Service']
 
                 if self.__args.data_source_type in (None, BQ) or service in (None, BQ):
-                    estimator = BqEstimator(
+                    estimator = BigQueryEstimator(
                         logger=self.__logger,
                         timeout=self.__args.timeout,
                         config=self.__config
@@ -95,7 +93,7 @@ class EntryPoint():
                     raise argparse.ArgumentError
 
                 result = estimator.check(sql)
-                response['results'].append(result)
+                response.append(result)
 
             return response
 
@@ -114,5 +112,5 @@ if __name__ == "__main__":
     response = ep.execute()
     if response is  None:
         print('SQL files are not found.')
-    for result in response['results']:
+    for result in response:
         print(json.dumps(result, indent=2))
