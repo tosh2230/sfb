@@ -104,7 +104,8 @@ class EntryPoint():
             raise e
 
         except Exception as e:
-            self.__logger.exception(e, exc_info=True)
+            if self.__logger:
+                self.__logger.exception(e, exc_info=True)
             raise e
 
 ########################################

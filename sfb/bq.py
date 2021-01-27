@@ -55,6 +55,7 @@ class BigQueryEstimator(Estimator):
 
             return {
                 "sql_file": filepath,
+                "status": "succeeded",
                 "total_bytes_processed": query_job.total_bytes_processed,
                 "estimated_cost($)": round(estimated, 6),
                 "query_parameter": list(map_repr),
@@ -66,6 +67,7 @@ class BigQueryEstimator(Estimator):
                 self._logger.exception(e, exc_info=False)
             return {
                 "sql_file": filepath,
+                "status": "failed",
                 "errors": e.errors,
             }
 
@@ -75,6 +77,7 @@ class BigQueryEstimator(Estimator):
                 self._logger.exception(e, exc_info=False)
             return {
                 "sql_file": filepath,
+                "status": "failed",
                 "errors": str(e),
             }
 
@@ -84,6 +87,7 @@ class BigQueryEstimator(Estimator):
                 self._logger.exception(e, exc_info=False)
             return {
                 "sql_file": filepath,
+                "status": "failed",
                 "errors": f"KeyError: {e}",
             }
 
