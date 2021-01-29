@@ -12,8 +12,8 @@ def cli():
     return ep.execute()
 
 if __name__ == '__main__':
-    response = cli()
-    if response is  None:
-        print('SQL files are not found.')
-    for result in response:
-        print(json.dumps(result, indent=2))
+    for i, result in enumerate(cli()):
+        if result is None:
+            print('SQL files are not found.')
+        else:
+            print(json.dumps(result, indent=2))

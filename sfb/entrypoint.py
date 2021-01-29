@@ -71,32 +71,29 @@ class EntryPoint():
         return logger
 
     def execute(self) -> dict:
-        response = []
-
         try:
-            DEFAULT = (None, BQ)
-            config_file_list = self.__config.get('QueryFiles')
+            # DEFAULT = (None, BQ)
+            # config_file_list = self.__config.get('QueryFiles')
+
+            estimator = BigQueryEstimator(
+                logger=self.__logger,
+                timeout=self.__args.timeout,
+                config=self.__config
+            )
 
             for sql in self.__args.sql:
-                estimator = None
-                file_name = sql.split('/')[-1]
-                service = config_file_list[file_name]['Service']
+                # estimator = None
+                # file_name = sql.split('/')[-1]
+                # service = config_file_list[file_name]['Service']
 
-                if self.__args.data_source_type in DEFAULT or service in DEFAULT:
-                    estimator = BigQueryEstimator(
-                        logger=self.__logger,
-                        timeout=self.__args.timeout,
-                        config=self.__config
-                    )
-                elif self.__args.data_source_type == ATHENA or service == ATHENA:
-                    return {"Athena": "Now Coding..."}
-                else:
-                    raise argparse.ArgumentError
+                # if self.__args.data_source_type in DEFAULT or service in DEFAULT:
+                #     pass
+                # elif self.__args.data_source_type == ATHENA or service == ATHENA:
+                #     return {"Athena": "Now Coding..."}
+                # else:
+                #     raise argparse.ArgumentError
 
-                result = estimator.check(sql)
-                response.append(result)
-
-            return response
+                yield estimator.check(sql)
 
         except (FileNotFoundError, KeyError) as e:
             if self.__logger:
@@ -111,8 +108,8 @@ class EntryPoint():
 ########################################
 if __name__ == "__main__":
     ep = EntryPoint()
-    response = ep.execute()
-    if response is  None:
-        print('SQL files are not found.')
-    for result in response:
-        print(json.dumps(result, indent=2))
+    for i, result in enumerate(ep.execute()):
+        if result is None:
+            print('SQL files are not found.')
+        else:
+            print(json.dumps(result, indent=2))

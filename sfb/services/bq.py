@@ -51,14 +51,14 @@ class BigQueryEstimator(Estimator):
             )
 
             estimated = query_job.total_bytes_processed / UNIT_SIZE * PRICING_ON_DEMAND
-            map_repr = map(lambda x: x.to_api_repr(), query_parameters)
+            # map_repr = map(lambda x: x.to_api_repr(), query_parameters)
 
             return {
                 "sql_file": filepath,
                 "status": "succeeded",
                 "total_bytes_processed": query_job.total_bytes_processed,
                 "estimated_cost($)": round(estimated, 6),
-                "query_parameter": list(map_repr),
+                # "query_parameter": list(map_repr),
             }
 
         except (exceptions.BadRequest, exceptions.NotFound) as e:
