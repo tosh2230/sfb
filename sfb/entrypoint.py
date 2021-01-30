@@ -8,9 +8,10 @@ from services.bq import BigQueryEstimator
 
 CONFIG_FILE = 'config/sfb.yaml'
 BQ = 'BigQuery'
-ATHENA = 'Athena'
+LOG_FORMAT = '%(asctime)s %(levelname)8s %(message)s'
 
 class EntryPoint():
+
     def __init__(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
         self.__args = self.__get_args()
@@ -24,26 +25,42 @@ class EntryPoint():
     def __get_args(self) -> argparse.Namespace:
         parser = argparse.ArgumentParser()
         parser.add_argument(
-            "-s", "--sql", 
+            "-f", "--file", 
             help="sql_file_path",
             type=str,
             nargs='*',
-            required=True
+            default=None
         )
         parser.add_argument(
-            "-d", "--data_source_type",
-            help="ser data_source_type",
+            "-q", "--query", 
+            help="query_string",
             type=str,
-            choices=[BQ, ATHENA]
+            default=None
+        )
+        parser.add_argument(
+            "-s", "--source_type",
+            help="source_type",
+            type=str,
+            choices=[BQ],
+            default=BQ
         )
         parser.add_argument(
             "-t", "--timeout", 
             help="request timeout seconds",
             type=float,
+            default=None
         )
         parser.add_argument(
-            '--debug',
-            action='store_true'
+            '-v', '--verbose',
+            help="verbose results",
+            action='store_true',
+            default=False
+        )
+        parser.add_argument(
+            '-d', '--debug',
+            help="for debugging",
+            action='store_true',
+            default=False
         )
 
         return parser.parse_args()
@@ -64,35 +81,22 @@ class EntryPoint():
         if not os.path.isdir(log_dir):
             os.mkdir(log_dir)
 
-        handler = logging.FileHandler(filename=f"{log_dir}/error.log")
-        handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)8s %(message)s"))
+        handler = logging.FileHandler(filename=f'{log_dir}/error.log')
+        handler.setFormatter(logging.Formatter(f'{LOG_FORMAT}'))
         logger.addHandler(handler)
 
         return logger
 
     def execute(self) -> dict:
         try:
-            # DEFAULT = (None, BQ)
-            # config_file_list = self.__config.get('QueryFiles')
-
             estimator = BigQueryEstimator(
+                config_query_files=self.__config['QueryFiles'],
                 logger=self.__logger,
                 timeout=self.__args.timeout,
-                config_query_files=self.__config['QueryFiles']
+                verbose=self.__args.verbose
             )
 
-            for sql in self.__args.sql:
-                # estimator = None
-                # file_name = sql.split('/')[-1]
-                # service = config_file_list[file_name]['Service']
-
-                # if self.__args.data_source_type in DEFAULT or service in DEFAULT:
-                #     pass
-                # elif self.__args.data_source_type == ATHENA or service == ATHENA:
-                #     return {"Athena": "Now Coding..."}
-                # else:
-                #     raise argparse.ArgumentError
-
+            for sql in self.__args.file:
                 yield estimator.check(sql)
 
         except (FileNotFoundError, KeyError) as e:
@@ -109,7 +113,4 @@ class EntryPoint():
 if __name__ == "__main__":
     ep = EntryPoint()
     for i, result in enumerate(ep.execute()):
-        if result is None:
-            print('SQL files are not found.')
-        else:
-            print(json.dumps(result, indent=2))
+        print(json.dumps(result, indent=2))

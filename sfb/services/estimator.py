@@ -6,11 +6,12 @@ from google.cloud import bigquery
 
 class Estimator():
 
-    def __init__(self, timeout: float=None, logger: Logger=None, config_query_files: dict=None):
+    def __init__(self, config_query_files: dict=None, logger: Logger=None, timeout: float=None, verbose: bool=False) -> None:
         self._client = bigquery.Client()
-        self._timeout = timeout
-        self._logger = logger
         self._config_query_files = config_query_files
+        self._logger = logger
+        self._timeout = timeout
+        self._verbose = verbose
 
         predicate = if_exception_type(
             InternalServerError,
