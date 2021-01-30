@@ -8,6 +8,12 @@ from .estimator import Estimator
 
 UNIT_SIZE = 1099511627776       # 1 TB
 PRICING_ON_DEMAND = 5           # $5.00 per TB
+FREQUENCY_DICT = {
+    "Hourly": 24 * 30,
+    "Daily": 30,
+    "Weekly": 4,
+    "Monthly": 1,
+}
 
 class BigQueryEstimator(Estimator):
 
@@ -23,6 +29,7 @@ class BigQueryEstimator(Estimator):
         for d in config['Parameters']:
             p = ScalarQueryParameter(d['name'], d['type'], d['value'])
             query_parameters.append(p)
+
         return query_parameters
 
     def __execute(self) -> QueryJob:
@@ -44,7 +51,7 @@ class BigQueryEstimator(Estimator):
         return query_job
  
     def __estimate_cost(self, total_bytes_processed: float) -> float:
-        return total_bytes_processed / UNIT_SIZE * PRICING_ON_DEMAND
+        return round((total_bytes_processed / UNIT_SIZE * PRICING_ON_DEMAND), 6)
 
     def __get_readable_query(self) -> str:
         return self.__query.replace('    ', ' ').replace('\n', ' ').expandtabs(tabsize=4)
@@ -59,7 +66,8 @@ class BigQueryEstimator(Estimator):
                 file_name: str = filepath.split('/')[-1]
                 config_query_file: dict = self._config_query_files[file_name]
                 self.__query_parameters = self.__get_query_parameters(config_query_file)
-                self.__location = config_query_file.get('location')
+                self.__location = config_query_file.get('Location')
+                frequency: str = config_query_file.get('Frequency')
 
             with open(filepath, 'r', encoding='utf-8') as f:
                 self.__query = f.read()
@@ -70,17 +78,23 @@ class BigQueryEstimator(Estimator):
             map_repr: list = [x.to_api_repr() for x in self.__query_parameters]
 
             result: dict = {
-                "sql_file": filepath,
-                "status": "Succeeded",
-                "total_bytes_processed": query_job.total_bytes_processed,
-                "estimated_cost($)": round(estimated, 6),
+                "SQL File": filepath,
+                "Status": "Succeeded",
+                "Total Bytes Processed": query_job.total_bytes_processed,
+                "Estimated Cost($)": {
+                    "per Run": estimated,
+                }
             }
 
+            if frequency:
+                coefficient: int = FREQUENCY_DICT[frequency]
+                cost_per_month: float = round(estimated * coefficient, 6)
+                result['Frequency'] = frequency
+                result['Estimated Cost($)']['per Month'] = cost_per_month
+
             if self._verbose:
-                result.update({
-                    "query": self.__get_readable_query(),
-                    "query_parameter": list(map_repr),
-                })
+                result['Query'] = self.__get_readable_query()
+                result['Query Parameters'] = list(map_repr)
 
             return result
 
@@ -88,18 +102,18 @@ class BigQueryEstimator(Estimator):
             if self._logger:
                 self.__log_error(filepath=filepath, e=e)
             return {
-                "sql_file": filepath,
-                "status": "Failed",
-                "errors": e.errors,
+                "SQL File": filepath,
+                "Status": "Failed",
+                "Errors": e.errors,
             }
 
         except (ReadTimeout, KeyError) as e:
             if self._logger:
                 self.__log_error(filepath=filepath, e=e)
             return {
-                "sql_file": filepath,
-                "status": "Failed",
-                "errors": str(e),
+                "SQL File": filepath,
+                "Status": "Failed",
+                "Errors": str(e),
             }
 
         except Exception as e:
@@ -115,15 +129,15 @@ class BigQueryEstimator(Estimator):
 
             estimated: float = self.__estimate_cost(query_job.total_bytes_processed)
             result: dict = {
-                "status": "Succeeded",
-                "total_bytes_processed": query_job.total_bytes_processed,
-                "estimated_cost($)": round(estimated, 6),
+                "Status": "Succeeded",
+                "Total Bytes Processed": query_job.total_bytes_processed,
+                "Estimated Cost($)": {
+                    "per Run": estimated,
+                }
             }
 
             if self._verbose:
-                result.update({
-                    "query": self.__get_readable_query(),
-                })
+                result['Query'] = self.__get_readable_query()
 
             return result
 
@@ -131,16 +145,16 @@ class BigQueryEstimator(Estimator):
             if self._logger:
                 self._logger.error(e)
             return {
-                "status": "Failed",
-                "errors": e.errors,
+                "Status": "Failed",
+                "Errors": e.errors,
             }
 
         except (ReadTimeout, KeyError) as e:
             if self._logger:
                 self._logger.error(e)
             return {
-                "status": "Failed",
-                "errors": str(e),
+                "Status": "Failed",
+                "Errors": str(e),
             }
 
         except Exception as e:

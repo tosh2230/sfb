@@ -1,10 +1,13 @@
 # https://googleapis.dev/python/bigquery/2.6.1/index.html
 # Type
 #   Name of parameter type. One of 'STRING', 'INT64', 'FLOAT64', 'NUMERIC', 'BOOL', 'TIMESTAMP', 'DATETIME', or 'DATE'
+# Frequency
+#   ['Hourly', 'Daily', 'Weekly', 'Monthly']
 QueryFiles:
   covid19_open_data.covid19_open_data.sql:
     Service: BigQuery
-    location: US
+    Location: US
+    Frequency: Daily
     Parameters:
     - name: ds_start_date
       type: DATE
@@ -14,7 +17,8 @@ QueryFiles:
       value: '2020-01-31'
   crypto_bitcoin.transactions.sql:
     Service: BigQuery
-    location: US
+    Location: US
+    Frequency: Weekly
     Parameters:
     - name: ds_start_date
       type: DATE
@@ -24,7 +28,8 @@ QueryFiles:
       value: '2020-01-20'
   usa_names.usa_1910_2013.sql:
     Service: BigQuery
-    location: US
+    Location: US
+    Frequency: Hourly
     Parameters:
     - name: state
       type: STRING

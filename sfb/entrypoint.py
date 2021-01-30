@@ -41,9 +41,9 @@ class EntryPoint():
             default=None
         )
 
-        # option
+        # optional
         parser.add_argument(
-            "-s", "--source_type",
+            "-s", "--source",
             help="source_type",
             type=str,
             choices=[BQ],
