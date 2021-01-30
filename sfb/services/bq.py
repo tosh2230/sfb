@@ -60,7 +60,7 @@ class BigQueryEstimator(Estimator):
 
     def __get_readable_size(self, bytes: float, exp: int=0) -> str:
         if bytes < UNIT:
-            rounded_bytes = round(bytes, 1)
+            rounded_bytes: float = round(bytes, 1)
             return f'{rounded_bytes} {BYTE_UNIT_LIST[exp]}'
 
         next_bytes: float = bytes / UNIT
