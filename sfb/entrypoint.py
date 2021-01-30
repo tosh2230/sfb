@@ -78,7 +78,7 @@ class EntryPoint():
             estimator = BigQueryEstimator(
                 logger=self.__logger,
                 timeout=self.__args.timeout,
-                config=self.__config
+                config_query_files=self.__config['QueryFiles']
             )
 
             for sql in self.__args.sql:
