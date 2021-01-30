@@ -8,6 +8,10 @@ import argparse
 from sfb.entrypoint import EntryPoint
 
 def cli():
+    results = []
     ep = EntryPoint()
     for i, result in enumerate(ep.execute()):
-        print(json.dumps(result, indent=2))
+        results.append(result)
+
+    print(json.dumps(results, indent=2))
+    sys.exit(0)

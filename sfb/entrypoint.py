@@ -1,4 +1,5 @@
 import os
+import sys
 import argparse
 import json
 import logging
@@ -119,6 +120,10 @@ class EntryPoint():
 
 ########################################
 if __name__ == "__main__":
+    results = []
     ep = EntryPoint()
     for i, result in enumerate(ep.execute()):
-        print(json.dumps(result, indent=2))
+        results.append(result)
+
+    print(json.dumps(results, indent=2))
+    sys.exit(0)
