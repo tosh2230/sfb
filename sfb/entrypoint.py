@@ -24,19 +24,24 @@ class EntryPoint():
 
     def __get_args(self) -> argparse.Namespace:
         parser = argparse.ArgumentParser()
-        parser.add_argument(
-            "-f", "--file", 
+
+        # required
+        group = parser.add_mutually_exclusive_group(required = True)
+        group.add_argument(
+            "-f", "--file",
             help="sql_file_path",
             type=str,
             nargs='*',
             default=None
         )
-        parser.add_argument(
-            "-q", "--query", 
+        group.add_argument(
+            "-q", "--query",
             help="query_string",
             type=str,
             default=None
         )
+
+        # option
         parser.add_argument(
             "-s", "--source_type",
             help="source_type",
@@ -96,8 +101,11 @@ class EntryPoint():
                 verbose=self.__args.verbose
             )
 
-            for sql in self.__args.file:
-                yield estimator.check(sql)
+            if self.__args.file:
+                for sql in self.__args.file:
+                    yield estimator.check_file(sql)
+            elif self.__args.query:
+                yield estimator.check_query(self.__args.query)
 
         except (FileNotFoundError, KeyError) as e:
             if self.__logger:

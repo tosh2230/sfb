@@ -2,7 +2,7 @@ from logging import Logger
 
 from requests.exceptions import ReadTimeout
 from google.api_core.exceptions import BadRequest, NotFound
-from google.cloud.bigquery import ScalarQueryParameter, QueryJobConfig
+from google.cloud.bigquery import ScalarQueryParameter, QueryJobConfig, QueryJob
 
 from .estimator import Estimator
 
@@ -14,6 +14,10 @@ class BigQueryEstimator(Estimator):
     def __init__(self, config_query_files: dict=None, logger: Logger=None, timeout: float=None, verbose: bool=False) -> None:
         super().__init__(config_query_files=config_query_files, timeout=timeout, logger=logger, verbose=verbose)
 
+        self.__query_parameters: list = []
+        self.__location: str = None
+        self.__query: str = None
+
     def __get_query_parameters(self, config: dict) -> list:
         query_parameters: list = []
         for d in config['Parameters']:
@@ -21,42 +25,49 @@ class BigQueryEstimator(Estimator):
             query_parameters.append(p)
         return query_parameters
 
-    def __log_exception(self, filepath: str, e: Exception) -> None:
-        self._logger.exception(f'sql_file: {filepath}')
-        self._logger.exception(e, exc_info=False)
+    def __execute(self) -> QueryJob:
+        job_config = QueryJobConfig(
+            dry_run=True,
+            use_legacy_sql=False,
+            use_query_cache=False,
+            query_parameters=self.__query_parameters,
+        )
 
-    def check(self, filepath: str) -> dict:
+        query_job = self._client.query(
+            self.__query,
+            job_config=job_config,
+            location=self.__location,
+            retry=self._retry,
+            timeout=self._timeout,
+        )
+
+        return query_job
+ 
+    def __estimate_cost(self, total_bytes_processed: float) -> float:
+        return total_bytes_processed / UNIT_SIZE * PRICING_ON_DEMAND
+
+    def __get_readable_query(self) -> str:
+        return self.__query.replace('    ', ' ').replace('\n', ' ').expandtabs(tabsize=4)
+
+    def __log_error(self, filepath: str, e: Exception) -> None:
+        self._logger.error(f'sql_file: {filepath}')
+        self._logger.error(e, exc_info=False)
+
+    def check_file(self, filepath: str) -> dict:
         try:
-            query_parameters: list = []
-            location: str = None
-            query: str = None
-
-            with open(filepath, 'r', encoding='utf-8') as f:
-                query = f.read()
-
             if self._config_query_files:
                 file_name: str = filepath.split('/')[-1]
                 config_query_file: dict = self._config_query_files[file_name]
-                query_parameters = self.__get_query_parameters(config_query_file)
-                location = config_query_file.get('location')
+                self.__query_parameters = self.__get_query_parameters(config_query_file)
+                self.__location = config_query_file.get('location')
 
-            job_config = QueryJobConfig(
-                dry_run=True,
-                use_legacy_sql=False,
-                use_query_cache=False,
-                query_parameters=query_parameters,
-            )
+            with open(filepath, 'r', encoding='utf-8') as f:
+                self.__query = f.read()
 
-            query_job = self._client.query(
-                query,
-                job_config=job_config,
-                location=location,
-                retry=self._retry,
-                timeout=self._timeout,
-            )
+            query_job: QueryJob = self.__execute()
 
-            estimated: float = query_job.total_bytes_processed / UNIT_SIZE * PRICING_ON_DEMAND
-            map_repr: list = [x.to_api_repr() for x in query_parameters]
+            estimated: float = self.__estimate_cost(query_job.total_bytes_processed)
+            map_repr: list = [x.to_api_repr() for x in self.__query_parameters]
 
             result: dict = {
                 "sql_file": filepath,
@@ -66,18 +77,16 @@ class BigQueryEstimator(Estimator):
             }
 
             if self._verbose:
-                result.update(
-                    {
-                        "query": query.replace('    ', ' ').replace('\n', ' ').expandtabs(tabsize=4),
-                        "query_parameter": list(map_repr),
-                    }
-                )
+                result.update({
+                    "query": self.__get_readable_query(),
+                    "query_parameter": list(map_repr),
+                })
 
             return result
 
         except (BadRequest, NotFound) as e:
             if self._logger:
-                self.__log_exception(filepath=filepath, e=e)
+                self.__log_error(filepath=filepath, e=e)
             return {
                 "sql_file": filepath,
                 "status": "Failed",
@@ -86,7 +95,7 @@ class BigQueryEstimator(Estimator):
 
         except (ReadTimeout, KeyError) as e:
             if self._logger:
-                self.__log_exception(filepath=filepath, e=e)
+                self.__log_error(filepath=filepath, e=e)
             return {
                 "sql_file": filepath,
                 "status": "Failed",
@@ -95,5 +104,46 @@ class BigQueryEstimator(Estimator):
 
         except Exception as e:
             if self._logger:
-                self.__log_exception(filepath=filepath, e=e)
+                self._logger.exception(f'sql_file: {filepath}')
+                self._logger.exception(e, exc_info=True)
+            raise e
+
+    def check_query(self, query: str) -> dict:
+        try:
+            self.__query = query
+            query_job: QueryJob = self.__execute()
+
+            estimated: float = self.__estimate_cost(query_job.total_bytes_processed)
+            result: dict = {
+                "status": "Succeeded",
+                "total_bytes_processed": query_job.total_bytes_processed,
+                "estimated_cost($)": round(estimated, 6),
+            }
+
+            if self._verbose:
+                result.update({
+                    "query": self.__get_readable_query(),
+                })
+
+            return result
+
+        except (BadRequest, NotFound) as e:
+            if self._logger:
+                self._logger.error(e)
+            return {
+                "status": "Failed",
+                "errors": e.errors,
+            }
+
+        except (ReadTimeout, KeyError) as e:
+            if self._logger:
+                self._logger.error(e)
+            return {
+                "status": "Failed",
+                "errors": str(e),
+            }
+
+        except Exception as e:
+            if self._logger:
+                self._logger.exception(e, exc_info=True)
             raise e
