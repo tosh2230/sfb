@@ -6,8 +6,10 @@ from google.cloud.bigquery import ScalarQueryParameter, QueryJobConfig, QueryJob
 
 from .estimator import Estimator
 
-UNIT_SIZE = 1099511627776       # 1 TB
-PRICING_ON_DEMAND = 5           # $5.00 per TB
+BYTE_UNIT_LIST = ['iB', 'KiB', 'MiB', 'GiB', 'TiB']
+UNIT = 2 ** 10
+PRICING_UNIT = 2 ** (10 * BYTE_UNIT_LIST.index('TiB'))  # 1 TiB
+PRICING_ON_DEMAND = 5                                   # $5.00 per TiB
 FREQUENCY_DICT = {
     "Hourly": 24 * 30,
     "Daily": 30,
@@ -51,10 +53,18 @@ class BigQueryEstimator(Estimator):
         return query_job
  
     def __estimate_cost(self, total_bytes_processed: float) -> float:
-        return round((total_bytes_processed / UNIT_SIZE * PRICING_ON_DEMAND), 6)
+        return round((total_bytes_processed / PRICING_UNIT * PRICING_ON_DEMAND), 6)
 
     def __get_readable_query(self) -> str:
         return self.__query.replace('    ', ' ').replace('\n', ' ').expandtabs(tabsize=4)
+
+    def __get_readable_size(self, bytes: float, exp: int=0) -> str:
+        if bytes < UNIT:
+            rounded_bytes = round(bytes, 1)
+            return f'{rounded_bytes} {BYTE_UNIT_LIST[exp]}'
+
+        next_bytes: float = bytes / UNIT
+        return self.__get_readable_size(bytes=next_bytes, exp=exp+1)
 
     def __log_error(self, filepath: str, e: Exception) -> None:
         self._logger.error(f'sql_file: {filepath}')
@@ -74,13 +84,13 @@ class BigQueryEstimator(Estimator):
 
             query_job: QueryJob = self.__execute()
 
+            processed_size: float = self.__get_readable_size(bytes=query_job.total_bytes_processed)
             estimated: float = self.__estimate_cost(query_job.total_bytes_processed)
-            map_repr: list = [x.to_api_repr() for x in self.__query_parameters]
 
             result: dict = {
                 "SQL File": filepath,
                 "Status": "Succeeded",
-                "Total Bytes Processed": query_job.total_bytes_processed,
+                "Total Bytes Processed": processed_size,
                 "Estimated Cost($)": {
                     "per Run": estimated,
                 }
@@ -93,6 +103,7 @@ class BigQueryEstimator(Estimator):
                 result['Estimated Cost($)']['per Month'] = cost_per_month
 
             if self._verbose:
+                map_repr: list = [x.to_api_repr() for x in self.__query_parameters]
                 result['Query'] = self.__get_readable_query()
                 result['Query Parameters'] = list(map_repr)
 
@@ -127,10 +138,11 @@ class BigQueryEstimator(Estimator):
             self.__query = query
             query_job: QueryJob = self.__execute()
 
+            processed_size: float = self.__get_readable_size(bytes=query_job.total_bytes_processed)
             estimated: float = self.__estimate_cost(query_job.total_bytes_processed)
             result: dict = {
                 "Status": "Succeeded",
-                "Total Bytes Processed": query_job.total_bytes_processed,
+                "Total Bytes Processed": processed_size,
                 "Estimated Cost($)": {
                     "per Run": estimated,
                 }
