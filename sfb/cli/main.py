@@ -8,10 +8,10 @@ import argparse
 from sfb.entrypoint import EntryPoint
 
 def cli():
-    results = []
+    results = {"Succeeded": [], "Failed": []}
     ep = EntryPoint()
-    for result in ep.execute():
-        results.append(result)
+    for response in ep.execute():
+        results[response['Status']].append(response['Result'])
 
     print(json.dumps(results, indent=2))
     sys.exit(0)

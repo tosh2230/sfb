@@ -15,32 +15,28 @@ LOG_FORMAT = '%(asctime)s %(levelname)8s %(message)s'
 class EntryPoint():
 
     def __init__(self):
+        self.__config = None
+        self.__logger = None
+
         self.__args = self.__get_args()
         if self.__args.config:
             self.__config = self.__get_config(self.__args.config)
-        else:
-            self.__config = None
 
         if self.__args.debug:
             self.__logger = self.__get_logger()
-        else:
-            self.__logger = None
 
     def __get_args(self) -> argparse.Namespace:
         parser = argparse.ArgumentParser()
 
-        # required
+        # choose either
         group = parser.add_mutually_exclusive_group()
         group.add_argument(
-            "-f", "--file",
-            help="sql_file_path", type=str, nargs='*'
+            "-f", "--file", help="sql_file_path", type=str, nargs='*'
         )
         group.add_argument(
-            "-q", "--query",
-            help="query_string", type=str, default=None
+            "-q", "--query", help="query_string", type=str, default=None
         )
 
-        # optional
         parser.add_argument(
             "-c", "--config",
             help="config_file_path", type=str, default=f"./config/{CONFIG_FILE}"
@@ -119,10 +115,10 @@ class EntryPoint():
 
 ########################################
 if __name__ == "__main__":
-    results = []
+    results = {"Succeeded": [], "Failed": []}
     ep = EntryPoint()
-    for result in ep.execute():
-        results.append(result)
+    for response in ep.execute():
+        results[response['Status']].append(response['Result'])
 
     print(json.dumps(results, indent=2))
     sys.exit(0)

@@ -6,7 +6,7 @@ import pathlib
 
 setup(
     name='sfb',  # Required
-    version='0.0.17',  # Required
+    version='0.0.19',  # Required
     description='sfb helps SQL testing and estimating the cost of services that depend on scan volume.',  # Optional
     # long_description=long_description,  # Optional
     # long_description_content_type='text/markdown',  # Optional

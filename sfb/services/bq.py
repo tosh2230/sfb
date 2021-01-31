@@ -92,44 +92,50 @@ class BigQueryEstimator(Estimator):
             processed_size: float = self.__get_readable_size(bytes=query_job.total_bytes_processed)
             estimated: float = self.__estimate_cost(query_job.total_bytes_processed)
 
-            result: dict = {
-                "SQL File": filepath,
+            response: dict = {
                 "Status": "Succeeded",
-                "Total Bytes Processed": processed_size,
-                "Estimated Cost($)": {
-                    "per Run": estimated,
+                "Result": {
+                    "SQL File": filepath,
+                    "Total Bytes Processed": processed_size,
+                    "Estimated Cost($)": {
+                        "per Run": estimated,
+                    }
                 }
             }
 
             if self._frequency:
                 coefficient: int = FREQUENCY_DICT[self._frequency]
                 cost_per_month: float = round(estimated * coefficient, 6)
-                result['Frequency'] = self._frequency
-                result['Estimated Cost($)']['per Month'] = cost_per_month
+                response['Result']['Frequency'] = self._frequency
+                response['Result']['Estimated Cost($)']['per Month'] = cost_per_month
 
             if self._verbose:
                 map_repr: list = [x.to_api_repr() for x in self.__query_parameters]
-                result['Query'] = self.__get_readable_query()
-                result['Query Parameters'] = list(map_repr)
+                response['Result']['Query'] = self.__get_readable_query()
+                response['Result']['Query Parameters'] = list(map_repr)
 
-            return result
+            return response
 
         except (BadRequest, NotFound) as e:
             if self._logger:
                 self.__log_exception(filepath=filepath, e=e)
             return {
-                "SQL File": filepath,
                 "Status": "Failed",
-                "Errors": e.errors,
+                "Result": {
+                    "SQL File": filepath,
+                    "Errors": e.errors,
+                }
             }
 
         except (ReadTimeout, KeyError) as e:
             if self._logger:
                 self.__log_exception(filepath=filepath, e=e)
             return {
-                "SQL File": filepath,
                 "Status": "Failed",
-                f"{e.__class__.__name__}": f"{str(e)}",
+                "Result": {
+                    "SQL File": filepath,
+                    f"{e.__class__.__name__}": f"{str(e)}",
+                }
             }
 
         except Exception as e:
@@ -144,25 +150,29 @@ class BigQueryEstimator(Estimator):
 
             processed_size: float = self.__get_readable_size(bytes=query_job.total_bytes_processed)
             estimated: float = self.__estimate_cost(query_job.total_bytes_processed)
-            result: dict = {
+            response: dict = {
                 "Status": "Succeeded",
-                "Total Bytes Processed": processed_size,
-                "Estimated Cost($)": {
-                    "per Run": estimated,
+                "Result": {
+                    "Total Bytes Processed": processed_size,
+                    "Estimated Cost($)": {
+                        "per Run": estimated,
+                    }
                 }
             }
 
             if self._verbose:
-                result['Query'] = self.__get_readable_query()
+                response['Result']['Query'] = self.__get_readable_query()
 
-            return result
+            return response
 
         except (BadRequest, NotFound) as e:
             if self._logger:
                 self._logger.error(e)
             return {
                 "Status": "Failed",
-                "Errors": e.errors,
+                "Result": {
+                    "Errors": e.errors,
+                }
             }
 
         except (ReadTimeout, KeyError) as e:
@@ -170,7 +180,9 @@ class BigQueryEstimator(Estimator):
                 self._logger.error(e)
             return {
                 "Status": "Failed",
-                "Errors": str(e),
+                "Result": {
+                    "Errors": str(e),
+                }
             }
 
         except Exception as e:
