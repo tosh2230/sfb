@@ -122,7 +122,7 @@ class EntryPoint():
 if __name__ == "__main__":
     results = []
     ep = EntryPoint()
-    for i, result in enumerate(ep.execute()):
+    for result in ep.execute():
         results.append(result)
 
     print(json.dumps(results, indent=2))

@@ -10,7 +10,7 @@ from sfb.entrypoint import EntryPoint
 def cli():
     results = []
     ep = EntryPoint()
-    for i, result in enumerate(ep.execute()):
+    for result in ep.execute():
         results.append(result)
 
     print(json.dumps(results, indent=2))
