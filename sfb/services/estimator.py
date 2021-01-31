@@ -19,6 +19,7 @@ class Estimator():
             ServiceUnavailable,
         )
         self._retry = Retry(predicate=predicate)
+        self._frequency: str = None
 
     def check(self, filepath: str) -> dict:
         pass

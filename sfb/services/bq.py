@@ -19,7 +19,10 @@ FREQUENCY_DICT = {
 
 class BigQueryEstimator(Estimator):
 
-    def __init__(self, config_query_files: dict=None, logger: Logger=None, timeout: float=None, verbose: bool=False) -> None:
+    def __init__(
+        self, config_query_files: dict=None, logger: Logger=None,
+        timeout: float=None, verbose: bool=False
+    ) -> None:
         super().__init__(config_query_files=config_query_files, timeout=timeout, logger=logger, verbose=verbose)
 
         self.__query_parameters: list = []
@@ -77,7 +80,7 @@ class BigQueryEstimator(Estimator):
                 config_query_file: dict = self._config_query_files[file_name]
                 self.__query_parameters = self.__get_query_parameters(config_query_file)
                 self.__location = config_query_file.get('Location')
-                frequency: str = config_query_file.get('Frequency')
+                self._frequency: str = config_query_file.get('Frequency')
 
             with open(filepath, 'r', encoding='utf-8') as f:
                 self.__query = f.read()
@@ -96,10 +99,10 @@ class BigQueryEstimator(Estimator):
                 }
             }
 
-            if frequency:
-                coefficient: int = FREQUENCY_DICT[frequency]
+            if self._frequency:
+                coefficient: int = FREQUENCY_DICT[self._frequency]
                 cost_per_month: float = round(estimated * coefficient, 6)
-                result['Frequency'] = frequency
+                result['Frequency'] = self._frequency
                 result['Estimated Cost($)']['per Month'] = cost_per_month
 
             if self._verbose:
