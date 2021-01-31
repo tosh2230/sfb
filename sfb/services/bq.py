@@ -19,11 +19,8 @@ FREQUENCY_DICT = {
 
 class BigQueryEstimator(Estimator):
 
-    def __init__(
-        self, config_query_files: dict=None, logger: Logger=None,
-        timeout: float=None, verbose: bool=False
-    ) -> None:
-        super().__init__(config_query_files=config_query_files, timeout=timeout, logger=logger, verbose=verbose)
+    def __init__(self, config_query_files: dict=None, project: str=None, logger: Logger=None, verbose: bool=False) -> None:
+        super().__init__(config_query_files=config_query_files, project=project, logger=logger, verbose=verbose)
 
         self.__query_parameters: list = []
         self.__location: str = None
@@ -50,7 +47,7 @@ class BigQueryEstimator(Estimator):
             job_config=job_config,
             location=self.__location,
             retry=self._retry,
-            timeout=self._timeout,
+            # timeout=self._timeout,
         )
 
         return query_job

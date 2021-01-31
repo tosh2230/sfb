@@ -31,23 +31,23 @@ class EntryPoint():
         # choose either
         group = parser.add_mutually_exclusive_group()
         group.add_argument(
-            "-f", "--file", help="sql_file_path", type=str, nargs='*'
+            "-f", "--file", help="sql filepath", type=str, nargs='*'
         )
         group.add_argument(
-            "-q", "--query", help="query_string", type=str, default=None
+            "-q", "--query", help="query string", type=str, default=None
         )
 
         parser.add_argument(
             "-c", "--config",
-            help="config_file_path", type=str, default=f"./config/{CONFIG_FILE}"
+            help="config filepath", type=str, default=f"./config/{CONFIG_FILE}"
         )
         parser.add_argument(
             "-s", "--source",
-            help="source_type", type=str, choices=[BQ], default=BQ
+            help="source type", type=str, choices=[BQ], default=BQ
         )
         parser.add_argument(
-            "-t", "--timeout", 
-            help="request timeout seconds", type=float, default=None
+            "-p", "--project",
+            help="GCP project", type=str, default=None
         )
         parser.add_argument(
             '-v', '--verbose',
@@ -55,7 +55,7 @@ class EntryPoint():
         )
         parser.add_argument(
             '-d', '--debug',
-            help="logging for debug", action='store_true', default=False
+            help="run as debug mode", action='store_true', default=False
         )
 
         return parser.parse_args()
@@ -84,10 +84,14 @@ class EntryPoint():
 
     def execute(self) -> dict:
         try:
+            if self.__config:
+                config_query_files = self.__config.get('QueryFiles')
+            else:
+                config_query_files = None
             estimator = BigQueryEstimator(
-                config_query_files=self.__config['QueryFiles'],
+                config_query_files=config_query_files,
+                project=self.__args.project,
                 logger=self.__logger,
-                timeout=self.__args.timeout,
                 verbose=self.__args.verbose
             )
 
