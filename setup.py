@@ -1,19 +1,19 @@
 from setuptools import setup, find_packages
 import pathlib
 
-# here = pathlib.Path(__file__).parent.resolve()
-# long_description = (here / 'README.md').read_text(encoding='utf-8')
+here = pathlib.Path(__file__).parent.resolve()
+long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name='sfb',  # Required
-    version='0.0.25',  # Required
+    version='0.1.0',  # Required
     description='sfb helps SQL testing and estimating the cost of services that depend on scan volume.',  # Optional
-    # long_description=long_description,  # Optional
-    # long_description_content_type='text/markdown',  # Optional
+    long_description=long_description,  # Optional
+    long_description_content_type='text/markdown',  # Optional
     url='https://github.com/tosh223/sfb',  # Optional
     author='Toshifumi Tsutsumi',  # Optional
     classifiers=[  # Optional
-        'Development Status :: 1 - Planning',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Testing',
         'License :: OSI Approved :: MIT License',

@@ -4,13 +4,13 @@ sfb helps SQL testing and estimating the cost of services that depend on scan vo
 
 ## Description
 
-- Be useful on continuous integration
-- Use dryrun include [Google BigQuery API Clinet Libraries](https://cloud.google.com/bigquery/docs/reference/libraries)
-- Replace query parameters automatically
 - Check SQL syntax
 - Estimate query costs for free
     - per Run
     - per Month
+- Replace query parameters automatically
+- Be useful on continuous integration
+- Use dryrun include [Google BigQuery API Client Libraries](https://cloud.google.com/bigquery/docs/reference/libraries)
 
 ## Install
 
