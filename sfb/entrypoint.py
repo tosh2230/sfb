@@ -5,21 +5,24 @@ import json
 import logging
 import yaml
 
-from services.bq import BigQueryEstimator
+from sfb.services.bq import BigQueryEstimator
 
-CONFIG_FILE = 'config/sfb.yaml'
+CONFIG_FILE = 'sfb.yaml'
+LOG_FILE = 'sfb.log'
 BQ = 'BigQuery'
 LOG_FORMAT = '%(asctime)s %(levelname)8s %(message)s'
 
 class EntryPoint():
 
     def __init__(self):
-        current_dir = os.path.dirname(os.path.abspath(__file__))
         self.__args = self.__get_args()
-        self.__config = self.__get_config(current_dir)
+        if self.__args.config:
+            self.__config = self.__get_config(self.__args.config)
+        else:
+            self.__config = None
 
         if self.__args.debug:
-            self.__logger = self.__get_logger(current_dir)
+            self.__logger = self.__get_logger(self.__args.debug)
         else:
             self.__logger = None
 
@@ -27,13 +30,12 @@ class EntryPoint():
         parser = argparse.ArgumentParser()
 
         # required
-        group = parser.add_mutually_exclusive_group(required = True)
+        group = parser.add_mutually_exclusive_group()
         group.add_argument(
             "-f", "--file",
             help="sql_file_path",
             type=str,
-            nargs='*',
-            default=None
+            nargs='*'
         )
         group.add_argument(
             "-q", "--query",
@@ -43,6 +45,12 @@ class EntryPoint():
         )
 
         # optional
+        parser.add_argument(
+            "-c", "--config",
+            help="config_file_path",
+            type=str,
+            default=f"./config/{CONFIG_FILE}"
+        )
         parser.add_argument(
             "-s", "--source",
             help="source_type",
@@ -64,30 +72,29 @@ class EntryPoint():
         )
         parser.add_argument(
             '-d', '--debug',
-            help="for debugging",
-            action='store_true',
-            default=False
+            help="logging for debug",
+            type=str,
+            default=f"./log/{LOG_FILE}"
         )
 
         return parser.parse_args()
 
-    def __get_config(self, current_dir: str) -> dict:
+    def __get_config(self, config_file_path: str) -> dict:
         config = None
-        file = f'{current_dir}/{CONFIG_FILE}'
-        if os.path.isfile(file):
-            with open(file) as f:
+        if os.path.isfile(config_file_path):
+            with open(config_file_path) as f:
                 config = yaml.load(f, Loader=yaml.SafeLoader)
         return config
 
-    def __get_logger(self, current_dir: str) -> logging.Logger:
+    def __get_logger(self, log_file_path: str) -> logging.Logger:
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.WARNING)
 
-        log_dir = f'{current_dir}/log'
+        log_dir = os.path.dirname(log_file_path)
         if not os.path.isdir(log_dir):
             os.mkdir(log_dir)
 
-        handler = logging.FileHandler(filename=f'{log_dir}/error.log')
+        handler = logging.FileHandler(filename=log_file_path)
         handler.setFormatter(logging.Formatter(f'{LOG_FORMAT}'))
         logger.addHandler(handler)
 
@@ -102,10 +109,16 @@ class EntryPoint():
                 verbose=self.__args.verbose
             )
 
-            if self.__args.file:
-                for sql in self.__args.file:
+            if self.__args.query is None:
+                if self.__args.file:
+                    files = self.__args.file
+                else:
+                    current_dir = os.getcwd() + '/sql'
+                    files = [f'{current_dir}/{file}' for file in os.listdir(current_dir)]
+
+                for sql in files:
                     yield estimator.check_file(sql)
-            elif self.__args.query:
+            else:
                 yield estimator.check_query(self.__args.query)
 
         except (FileNotFoundError, KeyError) as e:

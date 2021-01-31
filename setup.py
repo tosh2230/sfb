@@ -1,15 +1,15 @@
 from setuptools import setup, find_packages
 import pathlib
 
-here = pathlib.Path(__file__).parent.resolve()
-long_description = (here / 'README.md').read_text(encoding='utf-8')
+# here = pathlib.Path(__file__).parent.resolve()
+# long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name='sfb',  # Required
-    version='0.0.9',  # Required
-    description='Save (us) from bankruptcy',  # Optional
-    long_description=long_description,  # Optional
-    long_description_content_type='text/markdown',  # Optional
+    version='0.0.12',  # Required
+    description='sfb helps SQL testing and estimating the cost of services that depend on scan volume.',  # Optional
+    # long_description=long_description,  # Optional
+    # long_description_content_type='text/markdown',  # Optional
     url='https://github.com/tosh223/sfb',  # Optional
     author='Toshifumi Tsutsumi',  # Optional
     classifiers=[  # Optional
@@ -23,7 +23,7 @@ setup(
     # package_dir={'': 'sfb'},  # Optional
     packages=find_packages(),  # Required
     python_requires='>=3.6, <4',
-    install_requires=['google-cloud-bigquery', 'requests'],  # Optional
+    install_requires=['google-cloud-bigquery'],  # Optional
     # extras_require={  # Optional
     #     'dev': ['check-manifest'],
     #     'test': ['coverage'],
