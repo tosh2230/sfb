@@ -22,7 +22,7 @@ class EntryPoint():
             self.__config = None
 
         if self.__args.debug:
-            self.__logger = self.__get_logger(self.__args.debug)
+            self.__logger = self.__get_logger()
         else:
             self.__logger = None
 
@@ -33,48 +33,33 @@ class EntryPoint():
         group = parser.add_mutually_exclusive_group()
         group.add_argument(
             "-f", "--file",
-            help="sql_file_path",
-            type=str,
-            nargs='*'
+            help="sql_file_path", type=str, nargs='*'
         )
         group.add_argument(
             "-q", "--query",
-            help="query_string",
-            type=str,
-            default=None
+            help="query_string", type=str, default=None
         )
 
         # optional
         parser.add_argument(
             "-c", "--config",
-            help="config_file_path",
-            type=str,
-            default=f"./config/{CONFIG_FILE}"
+            help="config_file_path", type=str, default=f"./config/{CONFIG_FILE}"
         )
         parser.add_argument(
             "-s", "--source",
-            help="source_type",
-            type=str,
-            choices=[BQ],
-            default=BQ
+            help="source_type", type=str, choices=[BQ], default=BQ
         )
         parser.add_argument(
             "-t", "--timeout", 
-            help="request timeout seconds",
-            type=float,
-            default=None
+            help="request timeout seconds", type=float, default=None
         )
         parser.add_argument(
             '-v', '--verbose',
-            help="verbose results",
-            action='store_true',
-            default=False
+            help="verbose results", action='store_true', default=False
         )
         parser.add_argument(
             '-d', '--debug',
-            help="logging for debug",
-            type=str,
-            default=f"./log/{LOG_FILE}"
+            help="logging for debug", action='store_true', default=False
         )
 
         return parser.parse_args()
@@ -86,15 +71,16 @@ class EntryPoint():
                 config = yaml.load(f, Loader=yaml.SafeLoader)
         return config
 
-    def __get_logger(self, log_file_path: str) -> logging.Logger:
+    def __get_logger(self) -> logging.Logger:
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.WARNING)
 
-        log_dir = os.path.dirname(log_file_path)
+        log_dir = os.getcwd() + '/log'
         if not os.path.isdir(log_dir):
             os.mkdir(log_dir)
 
-        handler = logging.FileHandler(filename=log_file_path)
+        log_filename = f'{log_dir}/sfb.log'
+        handler = logging.FileHandler(filename=log_filename)
         handler.setFormatter(logging.Formatter(f'{LOG_FORMAT}'))
         logger.addHandler(handler)
 

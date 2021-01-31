@@ -69,18 +69,20 @@ class BigQueryEstimator(Estimator):
         next_bytes: float = bytes / UNIT
         return self.__get_readable_size(bytes=next_bytes, exp=exp+1)
 
-    def __log_error(self, filepath: str, e: Exception) -> None:
-        self._logger.error(f'sql_file: {filepath}')
-        self._logger.error(e, exc_info=False)
+    def __log_exception(self, filepath: str, e: Exception) -> None:
+        self._logger.exception(f'sql_file: {filepath}')
+        self._logger.exception(e)
 
     def check_file(self, filepath: str) -> dict:
         try:
             if self._config_query_files:
                 file_name: str = filepath.split('/')[-1]
-                config_query_file: dict = self._config_query_files[file_name]
-                self.__query_parameters = self.__get_query_parameters(config_query_file)
-                self.__location = config_query_file.get('Location')
-                self._frequency: str = config_query_file.get('Frequency')
+                config_query_file: dict = self._config_query_files.get(file_name)
+
+                if config_query_file:
+                    self.__query_parameters = self.__get_query_parameters(config_query_file)
+                    self.__location = config_query_file.get('Location')
+                    self._frequency: str = config_query_file.get('Frequency')
 
             with open(filepath, 'r', encoding='utf-8') as f:
                 self.__query = f.read()
@@ -114,7 +116,7 @@ class BigQueryEstimator(Estimator):
 
         except (BadRequest, NotFound) as e:
             if self._logger:
-                self.__log_error(filepath=filepath, e=e)
+                self.__log_exception(filepath=filepath, e=e)
             return {
                 "SQL File": filepath,
                 "Status": "Failed",
@@ -123,17 +125,16 @@ class BigQueryEstimator(Estimator):
 
         except (ReadTimeout, KeyError) as e:
             if self._logger:
-                self.__log_error(filepath=filepath, e=e)
+                self.__log_exception(filepath=filepath, e=e)
             return {
                 "SQL File": filepath,
                 "Status": "Failed",
-                "Errors": str(e),
+                f"{e.__class__.__name__}": f"{str(e)}",
             }
 
         except Exception as e:
             if self._logger:
-                self._logger.exception(f'sql_file: {filepath}')
-                self._logger.exception(e, exc_info=True)
+                self.__log_exception(filepath=filepath, e=e)
             raise e
 
     def check_query(self, query: str) -> dict:

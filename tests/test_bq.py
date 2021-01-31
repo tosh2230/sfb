@@ -23,4 +23,4 @@ class TestBigQueryEstimatorFailure:
         assert 'Syntax error' in check_file_failure_badrequest_02['Errors'][0]['message']
 
     def test_check_file_timeout(self, check_file_failure_timeout):
-        assert 'Read timed out' in check_file_failure_timeout['Errors']
+        assert 'Read timed out' in check_file_failure_timeout['ReadTimeout']
