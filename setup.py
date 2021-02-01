@@ -7,7 +7,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 setup(
     name='sfb',  # Required
     version='0.1.1',  # Required
-    description='SQL tester and cost estimater',  # Optional
+    description='SQL tester and cost estimator',  # Optional
     long_description=long_description,  # Optional
     long_description_content_type='text/markdown',  # Optional
     url='https://github.com/tosh223/sfb',  # Optional

@@ -23,7 +23,8 @@ pip install sfb
 - Python >= 3.6
     - Jupyter Notebook
     - Google Colaboratory
-- google-cloud-bigquery >= 2.6.2
+- google-cloud-bigquery >= 2.6.1
+- pyyaml >= 5.4.1
 
 ## Usage
 
