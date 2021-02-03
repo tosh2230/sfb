@@ -1,9 +1,11 @@
 include LICENSE
 exclude *.sh
+recursive-include config *.yaml
 recursive-include sfb *.py
 recursive-include sfb *.yaml
 recursive-exclude sql *.sql
 recursive-include tests *.ini
 recursive-exclude tests *.py
 recursive-exclude tests *.sql
+exclude tests/pytest.ini
 exclude README.md

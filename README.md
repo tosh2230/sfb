@@ -31,6 +31,7 @@ pip install sfb
 ### Estimate Query Costs
 
 ```sh
+# if runs with no arguments, execute files in './sql/*.sql'.
 $ sfb
 {
   "Succeeded": [
@@ -67,6 +68,14 @@ $ sfb
 }
 ```
 
+```sh
+# Others
+sfb -f ./sql/*.sql
+sfb -q "select * from test;"
+echo "select * from test;" | sfb | jq
+find ./sql -type f | sfb
+```
+
 ### Arguments
 
 ```sh
@@ -90,7 +99,7 @@ optional arguments:
   -d, --debug           run as debug mode
 ```
 
-### Directory
+### Directory (Optional)
 
 ```sh
 $ tree .
