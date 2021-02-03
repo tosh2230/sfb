@@ -15,15 +15,19 @@ LOG_FORMAT = '%(asctime)s %(levelname)8s %(message)s'
 class EntryPoint():
 
     def __init__(self):
-        self.__config = None
-        self.__logger = None
+        self.__args: argparse.Namespace = self.__get_args()
+        self.__config: dict = None
+        self.__logger: logging.Logger = None
+        self.__stdin: tuple = None
 
-        self.__args = self.__get_args()
         if self.__args.config:
             self.__config = self.__get_config(self.__args.config)
 
         if self.__args.debug:
             self.__logger = self.__get_logger()
+
+        if not sys.stdin.isatty():
+            self.__stdin = self.__get_stdin()
 
     def __get_args(self) -> argparse.Namespace:
         parser = argparse.ArgumentParser()
@@ -81,6 +85,13 @@ class EntryPoint():
         logger.addHandler(handler)
 
         return logger
+    
+    def __get_stdin(self) -> tuple:
+        list_stdin = []
+        for line in sys.stdin:
+            list_stdin.append(line.rstrip())
+
+        return tuple(list_stdin)
 
     def execute(self) -> dict:
         try:
@@ -88,6 +99,7 @@ class EntryPoint():
                 config_query_files = self.__config.get('QueryFiles')
             else:
                 config_query_files = None
+
             estimator = BigQueryEstimator(
                 config_query_files=config_query_files,
                 project=self.__args.project,
@@ -95,17 +107,28 @@ class EntryPoint():
                 verbose=self.__args.verbose
             )
 
-            if self.__args.query is None:
-                if self.__args.file:
-                    files = self.__args.file
-                else:
-                    current_dir = os.getcwd() + '/sql'
-                    files = [f'{current_dir}/{file}' for file in os.listdir(current_dir)]
+            files: list = []
+            queries: list = []
+            sql_dir = os.getcwd() + '/sql'
 
-                for sql in files:
-                    yield estimator.check_file(sql)
-            else:
-                yield estimator.check_query(self.__args.query)
+            if self.__stdin:
+                for line in self.__stdin:
+                    if line[-4:] == '.sql':
+                        files.append(line)
+                    elif 'SELECT' in line.upper() or 'FROM' in line.upper():
+                        queries.append(line)
+            elif self.__args.file:
+                files = self.__args.file
+            elif self.__args.query:
+                queries.append(self.__args.query)
+            elif os.path.isdir(sql_dir):
+                files = [f'{sql_dir}/{file}' for file in os.listdir(sql_dir)]
+
+            for file in files:
+                yield estimator.check_file(file)
+
+            for query in queries:
+                yield estimator.check_query(query)
 
         except (FileNotFoundError, KeyError) as e:
             if self.__logger:
