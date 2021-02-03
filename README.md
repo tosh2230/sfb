@@ -15,7 +15,7 @@ sfb helps SQL testing and estimating the cost of services that depend on scan vo
 ## Install
 
 ```sh
-pip install sfb
+$ pip install sfb
 ```
 
 ## Requirements
@@ -70,10 +70,10 @@ $ sfb
 
 ```sh
 # Others
-sfb -f ./sql/*.sql
-sfb -q "select * from test;"
-echo "select * from test;" | sfb | jq
-find ./sql -type f | sfb
+$ sfb -f ./sql/*.sql
+$ sfb -q "select * from test;"
+$ echo "select * from test;" | sfb | jq
+$ find ./sql -type f | sfb
 ```
 
 ### Arguments
