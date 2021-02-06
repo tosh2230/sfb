@@ -31,7 +31,7 @@ $ pip install sfb
 ### Estimate Query Costs
 
 ```sh
-# if runs with no arguments, execute files in './sql/*.sql'.
+# If runs with no arguments, execute files in './sql/*.sql'.
 $ sfb
 {
   "Succeeded": [
