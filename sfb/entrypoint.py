@@ -5,7 +5,7 @@ import json
 import logging
 import yaml
 
-from sfb.services.bq import BigQueryEstimator
+from services.bq import BigQueryEstimator
 
 CONFIG_FILE = 'sfb.yaml'
 LOG_FILE = 'sfb.log'
@@ -95,13 +95,8 @@ class EntryPoint():
 
     def execute(self) -> dict:
         try:
-            if self.__config:
-                config_query_files = self.__config.get('QueryFiles')
-            else:
-                config_query_files = None
-
             estimator = BigQueryEstimator(
-                config_query_files=config_query_files,
+                config=self.__config,
                 project=self.__args.project,
                 logger=self.__logger,
                 verbose=self.__args.verbose

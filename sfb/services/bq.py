@@ -19,35 +19,35 @@ FREQUENCY_DICT = {
 
 class BigQueryEstimator(Estimator):
 
-    def __init__(self, config_query_files: dict=None, project: str=None, logger: Logger=None, verbose: bool=False) -> None:
-        super().__init__(config_query_files=config_query_files, project=project, logger=logger, verbose=verbose)
+    def __init__(self, config: dict=None, project: str=None, logger: Logger=None, verbose: bool=False) -> None:
+        super().__init__(config=config, project=project, logger=logger, verbose=verbose)
 
-        self.__query_parameters: list = []
-        self.__location: str = None
-        self.__query: str = None
+        self.__query = None
 
     def __get_query_parameters(self, config: dict) -> list:
         query_parameters: list = []
-        for d in config['Parameters']:
-            p = ScalarQueryParameter(d['name'], d['type'], d['value'])
-            query_parameters.append(p)
+        param_list: list = config.get('Parameters')
+
+        if param_list:
+            for d in param_list:
+                p = ScalarQueryParameter(d['name'], d['type'], d['value'])
+                query_parameters.append(p)
 
         return query_parameters
 
-    def __execute(self) -> QueryJob:
+    def __execute(self, query_parameters: list, location: str) -> QueryJob:
         job_config = QueryJobConfig(
             dry_run=True,
             use_legacy_sql=False,
             use_query_cache=False,
-            query_parameters=self.__query_parameters,
+            query_parameters=query_parameters,
         )
 
         query_job = self._client.query(
             self.__query,
             job_config=job_config,
-            location=self.__location,
+            location=location,
             retry=self._retry,
-            # timeout=self._timeout,
         )
 
         return query_job
@@ -72,19 +72,30 @@ class BigQueryEstimator(Estimator):
 
     def check_file(self, filepath: str) -> dict:
         try:
-            if self._config_query_files:
-                file_name: str = filepath.split('/')[-1]
-                config_query_file: dict = self._config_query_files.get(file_name)
+            query_parameters: list = []
+            location: str = None
+            frequency: str = None
+            config_query_file: dict = None
+            config_globals: dict = None
 
-                if config_query_file:
-                    self.__query_parameters = self.__get_query_parameters(config_query_file)
-                    self.__location = config_query_file.get('Location')
-                    self._frequency: str = config_query_file.get('Frequency')
+            if self._config:
+                file_name: str = filepath.split('/')[-1]
+                config_query_file = self._config.get('QueryFiles').get(file_name)
+                config_globals = self._config.get('Globals')
+
+            if config_globals:
+                location = config_globals.get('Location')
+                frequency = config_globals.get('Frequency')                    
+
+            if config_query_file:
+                query_parameters = self.__get_query_parameters(config_query_file)
+                location = config_query_file.get('Location')
+                frequency = config_query_file.get('Frequency')
 
             with open(filepath, 'r', encoding='utf-8') as f:
                 self.__query = f.read()
 
-            query_job: QueryJob = self.__execute()
+            query_job: QueryJob = self.__execute(query_parameters, location)
 
             processed_size: float = self.__get_readable_size(bytes=query_job.total_bytes_processed)
             estimated: float = self.__estimate_cost(query_job.total_bytes_processed)
@@ -100,14 +111,14 @@ class BigQueryEstimator(Estimator):
                 }
             }
 
-            if self._frequency:
-                coefficient: int = FREQUENCY_DICT[self._frequency]
+            if frequency:
+                coefficient: int = FREQUENCY_DICT[frequency]
                 cost_per_month: float = round(estimated * coefficient, 6)
-                response['Result']['Frequency'] = self._frequency
+                response['Result']['Frequency'] = frequency
                 response['Result']['Estimated Cost($)']['per Month'] = cost_per_month
 
             if self._verbose:
-                map_repr: list = [x.to_api_repr() for x in self.__query_parameters]
+                map_repr: list = [x.to_api_repr() for x in query_parameters]
                 response['Result']['Query'] = self.__get_readable_query()
                 response['Result']['Query Parameters'] = list(map_repr)
 
