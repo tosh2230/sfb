@@ -6,13 +6,13 @@ from google.cloud import bigquery
 
 class Estimator():
 
-    def __init__(self, config_query_files: dict=None, project: str=None, logger: Logger=None, verbose: bool=False) -> None:
+    def __init__(self, config: dict=None, project: str='', logger: Logger=None, verbose: bool=False) -> None:
         if project:
             self._client = bigquery.Client(project)
         else:
             self._client = bigquery.Client()
 
-        self._config_query_files = config_query_files
+        self._config = config
         self._logger = logger
         self._verbose = verbose
 
@@ -22,7 +22,6 @@ class Estimator():
             ServiceUnavailable,
         )
         self._retry = Retry(predicate=predicate)
-        self._frequency: str = None
 
     def check(self, filepath: str) -> dict:
         pass
