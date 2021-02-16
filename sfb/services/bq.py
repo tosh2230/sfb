@@ -6,7 +6,7 @@ from google.cloud.bigquery import ScalarQueryParameter, QueryJobConfig, QueryJob
 
 from .estimator import Estimator
 
-BYTE_UNIT_LIST = ['iB', 'KiB', 'MiB', 'GiB', 'TiB']
+BYTE_UNIT_LIST = ('iB', 'KiB', 'MiB', 'GiB', 'TiB')
 UNIT = 2 ** 10
 PRICING_UNIT = 2 ** (10 * BYTE_UNIT_LIST.index('TiB'))  # 1 TiB
 PRICING_ON_DEMAND = 5                                   # $5.00 per TiB
@@ -85,12 +85,14 @@ class BigQueryEstimator(Estimator):
 
             if config_globals:
                 location = config_globals.get('Location')
-                frequency = config_globals.get('Frequency')                    
+                frequency = config_globals.get('Frequency')
 
             if config_query_file:
                 query_parameters = self.__get_query_parameters(config_query_file)
-                location = config_query_file.get('Location')
-                frequency = config_query_file.get('Frequency')
+                if 'Location' in config_query_file:
+                    location = config_query_file.get('Location')
+                if 'Frequency' in config_query_file:
+                    frequency = config_query_file.get('Frequency')
 
             with open(filepath, 'r', encoding='utf-8') as f:
                 self.__query = f.read()
