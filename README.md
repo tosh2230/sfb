@@ -116,11 +116,16 @@ $ tree .
 
 ```sh
 $ cat ./config/sfb.yaml
+
+# Default settings
+Globals:
+  Service: BigQuery
+  Location: US
+  Frequency: Daily
+
 QueryFiles:
   [your_sql_file_name]:
-    Service: BigQuery
-    Location: US
-    Frequency: Daily
+    Frequency: Weekly
     Parameters:
     - name: ds_start_date
       type: DATE
