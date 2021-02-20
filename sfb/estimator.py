@@ -114,9 +114,9 @@ class BigQueryEstimator(Estimator):
                 response['Result']['Estimated Cost($)']['per Month'] = self.__get_cost_per_month(estimated)
 
             if self._verbose:
-                map_repr: list = [x.to_api_repr() for x in self._config.query_parameters]
+                query_parameters_list: list = [x.to_api_repr() for x in self._config.query_parameters]
                 response['Result']['Query'] = self.__get_readable_query()
-                response['Result']['Query Parameters'] = list(map_repr)
+                response['Result']['Query Parameters'] = query_parameters_list
 
             return response
 
