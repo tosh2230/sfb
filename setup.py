@@ -6,7 +6,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name='sfb',  # Required
-    version='0.1.3',  # Required
+    version='0.1.4',  # Required
     description='SQL tester and cost estimator for Google BigQuery',  # Optional
     long_description=long_description,  # Optional
     long_description_content_type='text/markdown',  # Optional
