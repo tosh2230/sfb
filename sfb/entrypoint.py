@@ -1,11 +1,10 @@
 import os
 import sys
 import argparse
-import json
 import logging
-import yaml
 
-from sfb.services.bq import BigQueryEstimator
+from sfb.estimator import BigQueryEstimator
+from sfb.config import Config, BigQueryConfig
 
 CONFIG_FILE = 'sfb.yaml'
 LOG_FILE = 'sfb.log'
@@ -21,7 +20,7 @@ class EntryPoint():
         self.__stdin: tuple = None
 
         if self.__args.config:
-            self.__config = self.__get_config(self.__args.config)
+            self.__config = Config(self.__args.config)
 
         if self.__args.debug:
             self.__logger = self.__get_logger()
@@ -64,13 +63,6 @@ class EntryPoint():
 
         return parser.parse_args()
 
-    def __get_config(self, config_file_path: str) -> dict:
-        config = None
-        if os.path.isfile(config_file_path):
-            with open(config_file_path) as f:
-                config = yaml.load(f, Loader=yaml.SafeLoader)
-        return config
-
     def __get_logger(self) -> logging.Logger:
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.WARNING)
@@ -96,10 +88,10 @@ class EntryPoint():
     def execute(self) -> dict:
         try:
             estimator = BigQueryEstimator(
-                config=self.__config,
                 project=self.__args.project,
                 logger=self.__logger,
-                verbose=self.__args.verbose
+                verbose=self.__args.verbose,
+                config=BigQueryConfig(self.__args.config)
             )
 
             files: list = []
@@ -134,13 +126,3 @@ class EntryPoint():
             if self.__logger:
                 self.__logger.exception(e, exc_info=True)
             raise e
-
-########################################
-if __name__ == "__main__":
-    results = {"Succeeded": [], "Failed": []}
-    ep = EntryPoint()
-    for response in ep.execute():
-        results[response['Status']].append(response['Result'])
-
-    print(json.dumps(results, indent=2))
-    sys.exit(0)
