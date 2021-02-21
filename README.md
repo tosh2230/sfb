@@ -1,5 +1,7 @@
 # sfb
 
+[![CI](https://github.com/tosh223/sfb/actions/workflows/ci.yml/badge.svg)](https://github.com/tosh223/sfb/actions/workflows/ci.yml)
+
 sfb helps SQL testing and estimating the cost of services that depend on scan volume.
 
 ## Description
