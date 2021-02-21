@@ -1,29 +1,30 @@
 import os
 import sys
 import argparse
-import logging
+from logging import Logger
 
 from sfb.estimator import BigQueryEstimator
 from sfb.config import Config, BigQueryConfig
+from sfb.logger import SfbLogger
 
 CONFIG_FILE = 'sfb.yaml'
-LOG_FILE = 'sfb.log'
 BQ = 'BigQuery'
-LOG_FORMAT = '%(asctime)s %(levelname)8s %(message)s'
 
 class EntryPoint():
 
     def __init__(self):
         self.__args: argparse.Namespace = self.__get_args()
         self.__config: dict = None
-        self.__logger: logging.Logger = None
+        self.__logger: Logger = None
         self.__stdin: tuple = None
 
         if self.__args.config:
             self.__config = Config(self.__args.config)
 
         if self.__args.debug:
-            self.__logger = self.__get_logger()
+            sfb_logger = SfbLogger()
+            sfb_logger.set_logger()
+            self.__logger = sfb_logger.logger
 
         if not sys.stdin.isatty():
             self.__stdin = self.__get_stdin()
@@ -62,21 +63,6 @@ class EntryPoint():
         )
 
         return parser.parse_args()
-
-    def __get_logger(self) -> logging.Logger:
-        logger = logging.getLogger(__name__)
-        logger.setLevel(logging.WARNING)
-
-        log_dir = os.getcwd() + '/log'
-        if not os.path.isdir(log_dir):
-            os.mkdir(log_dir)
-
-        log_filename = f'{log_dir}/sfb.log'
-        handler = logging.FileHandler(filename=log_filename)
-        handler.setFormatter(logging.Formatter(f'{LOG_FORMAT}'))
-        logger.addHandler(handler)
-
-        return logger
     
     def __get_stdin(self) -> tuple:
         list_stdin = []
