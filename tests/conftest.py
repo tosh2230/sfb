@@ -1,8 +1,11 @@
 import pytest
 import os
+import subprocess
 
+from sfb.entrypoint import EntryPoint
 from sfb.estimator import BigQueryEstimator
 from sfb.config import BigQueryConfig
+from sfb.logger import SfbLogger
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -19,8 +22,20 @@ def plain_vanilla_config():
 
 @pytest.fixture(scope="session")
 def plain_vanilla_estimator(plain_vanilla_config):
-    return BigQueryEstimator(config=plain_vanilla_config)
+    proc = subprocess.run(
+        "gcloud config configurations list | grep True",
+        shell = True,
+        stdin = subprocess.PIPE,
+        stdout = subprocess.PIPE,
+        stderr = subprocess.PIPE,
+        text=True
+    )
+    project = proc.stdout.split()[3]
+    return BigQueryEstimator(project=project, config=plain_vanilla_config)
 
+########################################
+# plain_vanilla_file
+########################################
 @pytest.fixture(scope="function")
 def plain_vanilla_success(plain_vanilla_estimator):
     return plain_vanilla_estimator.check_file(sql_file_success)
@@ -38,6 +53,14 @@ def plain_vanilla_failure_badrequest_02(plain_vanilla_estimator):
     return plain_vanilla_estimator.check_file(sql_file_failure_br_02)
 
 ########################################
+# configured_file
+########################################
+@pytest.fixture(scope="session")
+def bigquery_logger():
+    sfb_logger = SfbLogger()
+    sfb_logger.set_logger()
+    return sfb_logger.logger
+
 @pytest.fixture(scope="session")
 def bigquery_config():
     return BigQueryConfig(config_file_path=config_file_path)
@@ -52,8 +75,8 @@ def bigquery_config_query_params(bigquery_config_set):
     return [x.to_api_repr() for x in bigquery_config_set.query_parameters]
 
 @pytest.fixture(scope="session")
-def configured_estimator(bigquery_config):
-    return BigQueryEstimator(config=bigquery_config)
+def configured_estimator(bigquery_logger, bigquery_config):
+    return BigQueryEstimator(config=bigquery_config, logger=bigquery_logger, verbose=True)
 
 @pytest.fixture(scope="function")
 def configured_success(configured_estimator):
@@ -70,3 +93,41 @@ def configured_failure_badrequest_01(configured_estimator):
 @pytest.fixture(scope="function")
 def configured_failure_badrequest_02(configured_estimator):
     return configured_estimator.check_file(sql_file_failure_br_02)
+
+########################################
+# query
+########################################
+@pytest.fixture(scope="function")
+def plain_vanilla_query_success(configured_estimator):
+    with open(sql_file_success, 'r', encoding='utf-8') as f:
+        query = f.read()
+    return configured_estimator.check_query(query)
+
+@pytest.fixture(scope="function")
+def plain_vanilla_query_failure_notfound(configured_estimator):
+    with open(sql_file_failure_nf, 'r', encoding='utf-8') as f:
+        query = f.read()
+    return configured_estimator.check_query(query)
+
+@pytest.fixture(scope="function")
+def plain_vanilla_query_failure_badrequest_01(configured_estimator):
+    with open(sql_file_failure_br_01, 'r', encoding='utf-8') as f:
+        query = f.read()
+    return configured_estimator.check_query(query)
+
+@pytest.fixture(scope="function")
+def plain_vanilla_query_failure_badrequest_02(configured_estimator):
+    with open(sql_file_failure_br_02, 'r', encoding='utf-8') as f:
+        query = f.read()
+    return configured_estimator.check_query(query)
+
+########################################
+# entrypoint
+########################################
+@pytest.fixture(scope="session")
+def bigquery_entrypoint():
+    results = {"Succeeded": [], "Failed": []}
+    ep = EntryPoint()
+    for response in ep.execute():
+        results[response['Status']].append(response['Result'])
+    return results
