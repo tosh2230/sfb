@@ -22,15 +22,7 @@ def plain_vanilla_config():
 
 @pytest.fixture(scope="session")
 def plain_vanilla_estimator(plain_vanilla_config):
-    proc = subprocess.run(
-        "gcloud config configurations list | grep True",
-        shell = True,
-        stdin = subprocess.PIPE,
-        stdout = subprocess.PIPE,
-        stderr = subprocess.PIPE,
-        text=True
-    )
-    project = proc.stdout.split()[3]
+    project = os.environ['GCP_PROJECT']
     return BigQueryEstimator(project=project, config=plain_vanilla_config)
 
 ########################################
