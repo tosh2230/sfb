@@ -1,6 +1,5 @@
 import pytest
 import os
-import subprocess
 
 from sfb.entrypoint import EntryPoint
 from sfb.estimator import BigQueryEstimator
