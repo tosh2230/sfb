@@ -52,3 +52,23 @@ class TestBigQueryConfiguredFailure:
 
     def test_check_file_badrequest_02(self, configured_failure_badrequest_02):
         assert 'Syntax error' in configured_failure_badrequest_02['Result']['Errors'][0]['message']
+
+class TestBigQueryVanillaQuerySuccees:
+    def test_check_file_type(self, plain_vanilla_query_success):
+        assert type(plain_vanilla_query_success) is dict
+
+    def test_check_file_bytes(self, plain_vanilla_query_success):
+        assert plain_vanilla_query_success['Result']['Total Bytes Processed'][-3:] == 'MiB'
+
+    def test_check_file_cost_per_run(self, plain_vanilla_query_success):
+        assert plain_vanilla_query_success['Result']['Estimated Cost($)']['per Run'] > 0
+
+class TestBigQueryVanillaQueryFailure:
+    def test_check_file_notfound_type(self, plain_vanilla_query_failure_notfound):
+        assert 'Not found' in plain_vanilla_query_failure_notfound['Result']['Errors'][0]['message']
+
+    def test_check_file_badrequest_01(self, plain_vanilla_query_failure_badrequest_01):
+        assert 'Unrecognized name' in plain_vanilla_query_failure_badrequest_01['Result']['Errors'][0]['message']
+
+    def test_check_file_badrequest_02(self, plain_vanilla_query_failure_badrequest_02):
+        assert 'Syntax error' in plain_vanilla_query_failure_badrequest_02['Result']['Errors'][0]['message']
