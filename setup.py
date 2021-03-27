@@ -22,7 +22,7 @@ setup(
     keywords='bigquery, sql, testing, development',  # Optional
     # package_dir={'': 'sfb'},  # Optional
     packages=find_packages(),  # Required
-    python_requires='>=3.6, <4',
+    python_requires='>=3.6, <3.10',
     install_requires=['google-cloud-bigquery', 'pyyaml'],  # Optional
     # extras_require={  # Optional
     #     'dev': ['check-manifest'],

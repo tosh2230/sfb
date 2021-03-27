@@ -2,6 +2,7 @@ import os
 import sys
 import argparse
 from logging import Logger
+from typing import Iterator
 
 from sfb.estimator import BigQueryEstimator
 from sfb.config import Config, BigQueryConfig
@@ -9,6 +10,7 @@ from sfb.logger import SfbLogger
 
 CONFIG_FILE = 'sfb.yaml'
 BQ = 'BigQuery'
+
 
 class EntryPoint():
 
@@ -67,7 +69,7 @@ class EntryPoint():
         )
 
         return parser.parse_args()
-    
+
     def __get_stdin(self) -> tuple:
         list_stdin = []
         for line in sys.stdin:
@@ -75,7 +77,7 @@ class EntryPoint():
 
         return tuple(list_stdin)
 
-    def execute(self) -> dict:
+    def execute(self) -> Iterator[dict]:
         try:
             estimator = BigQueryEstimator(
                 logger=self.__logger,

@@ -1,10 +1,10 @@
 """
 Entry point for the CLI
 """
-import sys
 import json
 
 from sfb.entrypoint import EntryPoint
+
 
 def cli():
     results = {"Succeeded": [], "Failed": []}
