@@ -3,18 +3,14 @@ from logging import Logger
 from requests.exceptions import ReadTimeout
 from google.api_core.exceptions import BadRequest, NotFound, InternalServerError, TooManyRequests, ServiceUnavailable
 from google.api_core.retry import if_exception_type, Retry
-from google.cloud.bigquery import Client, ScalarQueryParameter, QueryJobConfig, QueryJob
+from google.cloud.bigquery import Client, QueryJobConfig, QueryJob
+from google.oauth2.service_account import Credentials
 
 from sfb.config import Config, BigQueryConfig
 
 class Estimator():
 
-    def __init__(self, project: str='', logger: Logger=None, verbose: bool=False) -> None:
-        if project:
-            self._client = Client(project)
-        else:
-            self._client = Client()
-
+    def __init__(self, logger: Logger=None, verbose: bool=False) -> None:
         self._logger = logger
         self._verbose = verbose
         self._config: Config = None
@@ -43,9 +39,20 @@ class BigQueryEstimator(Estimator):
         "Monthly": 1,
     }
 
-    def __init__(self, project: str=None, logger: Logger=None, verbose: bool=False, config: BigQueryConfig=None) -> None:
-        super().__init__(project=project, logger=logger, verbose=verbose)
+    def __init__(self, logger: Logger=None, verbose: bool=False, config: BigQueryConfig=None, project: str=None, key: str=None) -> None:
+        super().__init__(logger=logger, verbose=verbose)
 
+        if key:
+            self.__credentials = Credentials.from_service_account_file(
+                filename=key,
+                scopes=["https://www.googleapis.com/auth/cloud-platform"]
+            )
+            self.__project = credentials.project_id
+        else:
+            self.__credentials = None
+            self.__project = project
+
+        self._client = Client(credentials=self.__credentials, project=self.__project)
         self._config: BigQueryConfig = config
         self.__query: str = None
 

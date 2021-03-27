@@ -35,7 +35,7 @@ class EntryPoint():
         # choose either
         group = parser.add_mutually_exclusive_group()
         group.add_argument(
-            "-f", "--file", help="sql filepath", type=str, nargs='*'
+            "-f", "--file", help="sql file path", type=str, nargs='*'
         )
         group.add_argument(
             "-q", "--query", help="query string", type=str, default=None
@@ -43,23 +43,27 @@ class EntryPoint():
 
         parser.add_argument(
             "-c", "--config",
-            help="config filepath", type=str, default=f"./config/{CONFIG_FILE}"
+            help="sfb config path", type=str, default=f"./config/{CONFIG_FILE}"
+        )
+        # parser.add_argument(
+        #     "-s", "--source",
+        #     help="source type", type=str, choices=[BQ], default=BQ
+        # )
+        parser.add_argument(
+            '-v', '--verbose',
+            help="return verbose results", action='store_true', default=False
         )
         parser.add_argument(
-            "-s", "--source",
-            help="source type", type=str, choices=[BQ], default=BQ
+            '-d', '--debug',
+            help="run as debug mode", action='store_true', default=False
         )
         parser.add_argument(
             "-p", "--project",
             help="GCP project", type=str, default=None
         )
         parser.add_argument(
-            '-v', '--verbose',
-            help="verbose results", action='store_true', default=False
-        )
-        parser.add_argument(
-            '-d', '--debug',
-            help="run as debug mode", action='store_true', default=False
+            "-k", "--key",
+            help="GCP service account key path", type=str, default=None
         )
 
         return parser.parse_args()
@@ -74,10 +78,11 @@ class EntryPoint():
     def execute(self) -> dict:
         try:
             estimator = BigQueryEstimator(
-                project=self.__args.project,
                 logger=self.__logger,
                 verbose=self.__args.verbose,
-                config=BigQueryConfig(self.__args.config)
+                config=BigQueryConfig(self.__args.config),
+                project=self.__args.project,
+                key=self.__args.key
             )
 
             files: list = []

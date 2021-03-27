@@ -82,22 +82,22 @@ $ find ./sql -type f | sfb
 
 ```sh
 $ sfb -h
-usage: sfb [-h] [-f [FILE [FILE ...]] | -q QUERY] [-c CONFIG] [-s {BigQuery}]
-           [-p PROJECT] [-v] [-d]
+usage: sfb [-h] [-f [FILE [FILE ...]] | -q QUERY] [-c CONFIG] [-v] [-d]
+           [-p PROJECT] [-k KEY]
 
 optional arguments:
   -h, --help            show this help message and exit
   -f [FILE [FILE ...]], --file [FILE [FILE ...]]
-                        sql filepath
+                        sql file path
   -q QUERY, --query QUERY
                         query string
   -c CONFIG, --config CONFIG
-                        config filepath
-  -s {BigQuery}, --source {BigQuery}
-                        source type
+                        sfb config path
   -p PROJECT, --project PROJECT
                         GCP project
-  -v, --verbose         verbose results
+  -k KEY, --key KEY
+                        GCP service account key path
+  -v, --verbose         return verbose results
   -d, --debug           run as debug mode
 ```
 
