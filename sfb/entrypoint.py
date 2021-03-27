@@ -35,7 +35,7 @@ class EntryPoint():
         # choose either
         group = parser.add_mutually_exclusive_group()
         group.add_argument(
-            "-f", "--file", help="sql filepath", type=str, nargs='*'
+            "-f", "--file", help="sql file path", type=str, nargs='*'
         )
         group.add_argument(
             "-q", "--query", help="query string", type=str, default=None
@@ -43,7 +43,7 @@ class EntryPoint():
 
         parser.add_argument(
             "-c", "--config",
-            help="config filepath", type=str, default=f"./config/{CONFIG_FILE}"
+            help="sfb config path", type=str, default=f"./config/{CONFIG_FILE}"
         )
         # parser.add_argument(
         #     "-s", "--source",
@@ -51,7 +51,7 @@ class EntryPoint():
         # )
         parser.add_argument(
             '-v', '--verbose',
-            help="verbose results", action='store_true', default=False
+            help="return verbose results", action='store_true', default=False
         )
         parser.add_argument(
             '-d', '--debug',
