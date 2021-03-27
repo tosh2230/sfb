@@ -1,6 +1,7 @@
 import os
 import logging
 
+
 class SfbLogger():
 
     LOG_FORMAT = '%(asctime)s %(levelname)8s %(message)s'

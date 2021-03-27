@@ -1,19 +1,22 @@
 from logging import Logger
 
 from requests.exceptions import ReadTimeout
-from google.api_core.exceptions import BadRequest, NotFound, InternalServerError, TooManyRequests, ServiceUnavailable
+from google.api_core.exceptions import \
+    BadRequest, NotFound, InternalServerError,\
+    TooManyRequests, ServiceUnavailable
 from google.api_core.retry import if_exception_type, Retry
 from google.cloud.bigquery import Client, QueryJobConfig, QueryJob
 from google.oauth2.service_account import Credentials
 
 from sfb.config import Config, BigQueryConfig
 
+
 class Estimator():
 
-    def __init__(self, logger: Logger=None, verbose: bool=False) -> None:
+    def __init__(self, logger: Logger = None, verbose: bool = False) -> None:
         self._logger = logger
         self._verbose = verbose
-        self._config: Config = None
+        self._config: Config
 
         predicate = if_exception_type(
             InternalServerError,
@@ -31,7 +34,7 @@ class BigQueryEstimator(Estimator):
     BYTE_UNIT_LIST = ('iB', 'KiB', 'MiB', 'GiB', 'TiB')
     UNIT = 2 ** 10
     PRICING_UNIT = 2 ** (10 * BYTE_UNIT_LIST.index('TiB'))  # 1 TiB
-    PRICING_ON_DEMAND = 5                                   # $5.00 per TiB
+    PRICE_ON_DEMAND = 5                                   # $5.00 per TiB
     FREQUENCY_DICT = {
         "Hourly": 24 * 30,
         "Daily": 30,
@@ -39,7 +42,10 @@ class BigQueryEstimator(Estimator):
         "Monthly": 1,
     }
 
-    def __init__(self, logger: Logger=None, verbose: bool=False, config: BigQueryConfig=None, project: str=None, key: str=None) -> None:
+    def __init__(
+        self, logger: Logger = None, verbose: bool = False,
+        config=None, project: str = None, key: str = None
+    ) -> None:
         super().__init__(logger=logger, verbose=verbose)
 
         if key:
@@ -47,14 +53,17 @@ class BigQueryEstimator(Estimator):
                 filename=key,
                 scopes=["https://www.googleapis.com/auth/cloud-platform"]
             )
-            self.__project = credentials.project_id
+            self.__project = self.__credentials.project_id
         else:
             self.__credentials = None
             self.__project = project
 
-        self._client = Client(credentials=self.__credentials, project=self.__project)
+        self._client = Client(
+            credentials=self.__credentials,
+            project=self.__project
+        )
         self._config: BigQueryConfig = config
-        self.__query: str = None
+        self.__query: str
 
     def __execute(self) -> QueryJob:
         job_config = QueryJobConfig(
@@ -72,14 +81,19 @@ class BigQueryEstimator(Estimator):
         )
 
         return query_job
- 
+
     def __estimate_cost(self, total_bytes_processed: float) -> float:
-        return round((total_bytes_processed / self.PRICING_UNIT * self.PRICING_ON_DEMAND), 6)
+        return round(
+            (total_bytes_processed / self.PRICING_UNIT * self.PRICE_ON_DEMAND),
+            6
+        )
 
     def __get_readable_query(self) -> str:
-        return self.__query.replace('    ', ' ').replace('\n', ' ').expandtabs(tabsize=4)
+        return self.__query.replace('    ', ' ') \
+            .replace('\n', ' ') \
+            .expandtabs(tabsize=4)
 
-    def __get_readable_size(self, bytes: float, exp: int=0) -> str:
+    def __get_readable_size(self, bytes: float, exp: int = 0) -> str:
         if bytes < self.UNIT:
             rounded_bytes: float = round(bytes, 1)
             return f'{rounded_bytes} {self.BYTE_UNIT_LIST[exp]}'
@@ -88,12 +102,16 @@ class BigQueryEstimator(Estimator):
         return self.__get_readable_size(bytes=next_bytes, exp=exp+1)
 
     def __get_cost_per_month(self, estimated: float) -> float:
-        coefficient: int = self.FREQUENCY_DICT[self._config.frequency]
+        if self._config.frequency:
+            coefficient = self.FREQUENCY_DICT[self._config.frequency]
+        else:
+            coefficient = 0
         return round(estimated * coefficient, 6)
 
     def __log_exception(self, filepath: str, e: Exception) -> None:
-        self._logger.exception(f'sql_file: {filepath}')
-        self._logger.exception(e)
+        if self._logger:
+            self._logger.exception(f'sql_file: {filepath}')
+            self._logger.exception(e)
 
     def check_file(self, filepath: str) -> dict:
         try:
@@ -104,12 +122,16 @@ class BigQueryEstimator(Estimator):
                 self._config.set_config(filepath)
             query_job: QueryJob = self.__execute()
 
-            estimated: float = self.__estimate_cost(query_job.total_bytes_processed)
+            estimated: float = self.__estimate_cost(
+                query_job.total_bytes_processed
+            )
             response: dict = {
                 "Status": "Succeeded",
                 "Result": {
                     "SQL File": filepath,
-                    "Total Bytes Processed": self.__get_readable_size(bytes=query_job.total_bytes_processed),
+                    "Total Bytes Processed": self.__get_readable_size(
+                        bytes=query_job.total_bytes_processed
+                    ),
                     "Estimated Cost($)": {
                         "per Run": estimated,
                     }
@@ -118,10 +140,12 @@ class BigQueryEstimator(Estimator):
 
             if self._config.frequency:
                 response['Result']['Frequency'] = self._config.frequency
-                response['Result']['Estimated Cost($)']['per Month'] = self.__get_cost_per_month(estimated)
+                response['Result']['Estimated Cost($)']['per Month'] = \
+                    self.__get_cost_per_month(estimated)
 
             if self._verbose:
-                query_parameters_list: list = [x.to_api_repr() for x in self._config.query_parameters]
+                query_parameters_list: list = \
+                     [x.to_api_repr() for x in self._config.query_parameters]
                 response['Result']['Query'] = self.__get_readable_query()
                 response['Result']['Query Parameters'] = query_parameters_list
 
@@ -159,8 +183,12 @@ class BigQueryEstimator(Estimator):
             self.__query = query
             query_job: QueryJob = self.__execute()
 
-            processed_size: float = self.__get_readable_size(bytes=query_job.total_bytes_processed)
-            estimated: float = self.__estimate_cost(query_job.total_bytes_processed)
+            processed_size: str = self.__get_readable_size(
+                bytes=query_job.total_bytes_processed
+            )
+            estimated: float = self.__estimate_cost(
+                query_job.total_bytes_processed
+            )
             response: dict = {
                 "Status": "Succeeded",
                 "Result": {
