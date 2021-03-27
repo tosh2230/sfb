@@ -102,7 +102,10 @@ class BigQueryEstimator(Estimator):
         return self.__get_readable_size(bytes=next_bytes, exp=exp+1)
 
     def __get_cost_per_month(self, estimated: float) -> float:
-        coefficient: int = self.FREQUENCY_DICT[self._config.frequency]
+        if self._config.frequency:
+            coefficient = self.FREQUENCY_DICT[self._config.frequency]
+        else:
+            coefficient = 0
         return round(estimated * coefficient, 6)
 
     def __log_exception(self, filepath: str, e: Exception) -> None:
